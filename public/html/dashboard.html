@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#070b18;--navy2:#0d1224;--navy3:#111827;
+  --blue:#2456ff;--blue2:#4f7aff;--blue-g:rgba(36,86,255,.12);
+  --white:#f0f4ff;--muted:rgba(240,244,255,.45);--muted2:rgba(240,244,255,.22);
+  --border:rgba(240,244,255,.07);--border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;transition:background .15s;text-decoration:none;color:var(--white);}
+.company-pill:hover{background:var(--surface2)}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+.app-body{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+
+.main{flex:1;overflow-y:auto;padding:28px 32px;}
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;}
+.btn-primary{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;transition:opacity .15s;}
+.btn-primary:hover{opacity:.85}
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:13px;padding:18px 20px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-card.blue::before{background:var(--blue);}
+.kpi-card.amber::before{background:var(--amber);}
+.kpi-card.red::before{background:var(--red);}
+.kpi-card.green::before{background:var(--green);}
+.kpi-label{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.kpi-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:5px;}
+.kpi-sub{font-size:12px;color:var(--muted);}
+
+.section-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:13px;overflow:hidden;}
+.section-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:0.5px solid var(--border);}
+.section-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;}
+.es-icon{width:56px;height:56px;background:var(--surface);border:0.5px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.es-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;}
+.es-sub{font-size:13px;color:var(--muted);margin-bottom:20px;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <a href="/bedrijfsprofielen" class="company-pill">
+      <div class="cp-dot"></div>
+      <span>+ Bedrijfsprofiel instellen</span>
+    </a>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Gratis</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item active" href="/dashboard">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item" href="/facturen">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+    </a>
+    <a class="nav-item" href="/offertes">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="/incasso">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="/terugkerend">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="/klanten">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item" href="/financieel">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item" href="/bedrijfsprofielen">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="/instellingen">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+  </nav>
+
+  <div class="main">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <a href="/facturen/nieuw" class="btn-primary">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nieuwe factuur
+      </a>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card blue">
+        <div class="kpi-label">Omzet deze maand</div>
+        <div class="kpi-value">€ 0,00</div>
+        <div class="kpi-sub">Eerste maand</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Openstaand</div>
+        <div class="kpi-value">€ 0,00</div>
+        <div class="kpi-sub">0 facturen open</div>
+      </div>
+      <div class="kpi-card red">
+        <div class="kpi-label">Verlopen</div>
+        <div class="kpi-value">€ 0,00</div>
+        <div class="kpi-sub">0 facturen verlopen</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Incasso actief</div>
+        <div class="kpi-value">0</div>
+        <div class="kpi-sub">SEPA-machtigingen</div>
+      </div>
+    </div>
+
+    <div class="section-card">
+      <div class="section-head">
+        <span class="section-title">Recente facturen</span>
+        <a href="/facturen" style="font-size:12px;color:var(--blue2);text-decoration:none;">Alle facturen →</a>
+      </div>
+      <div class="empty-state">
+        <div class="es-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(240,244,255,0.45)" stroke-width="1.4">
+            <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/>
+          </svg>
+        </div>
+        <div class="es-title">Nog geen facturen</div>
+        <div class="es-sub">Maak uw eerste factuur aan om te beginnen</div>
+        <a href="/facturen/nieuw" class="btn-primary">Eerste factuur aanmaken</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

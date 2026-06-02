@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Financieel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root{
+  --navy:#070b18;--navy2:#0d1224;--navy3:#111827;
+  --blue:#2456ff;--blue2:#4f7aff;--blue-g:rgba(36,86,255,.12);
+  --white:#f0f4ff;--muted:rgba(240,244,255,.45);--muted2:rgba(240,244,255,.22);
+  --border:rgba(240,244,255,.07);--border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;transition:background .15s;}
+.company-pill:hover{background:var(--surface2)}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:28px 32px;}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:26px;}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;}
+.header-right{display:flex;align-items:center;gap:10px;}
+
+/* PERIOD SELECTOR */
+.period-select{
+  display:flex;align-items:center;gap:0;
+  background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;overflow:hidden;
+}
+.ps-opt{
+  padding:7px 14px;font-size:12.5px;color:var(--muted);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.ps-opt:hover{color:var(--white);}
+.ps-opt.active{background:var(--blue-g);color:var(--blue2);}
+.year-select{
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:8px;padding:7px 12px;font-size:12.5px;
+  color:var(--white);font-family:'DM Sans',sans-serif;outline:none;cursor:pointer;
+}
+.year-select option{background:var(--navy3);}
+.btn-export{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:8px;padding:8px 14px;font-size:13px;color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.btn-export:hover{background:var(--surface2);color:var(--white);}
+.btn-export svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.kpi-card{
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:13px;padding:18px 20px;position:relative;overflow:hidden;
+}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-card.b::before{background:var(--blue);}
+.kpi-card.g::before{background:var(--green);}
+.kpi-card.a::before{background:var(--amber);}
+.kpi-card.r::before{background:var(--red);}
+.kpi-label{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:8px;}
+.kpi-value{font-family:'Syne',sans-serif;font-size:26px;font-weight:800;color:#fff;margin-bottom:5px;letter-spacing:-.5px;}
+.kpi-sub{font-size:12px;color:var(--muted);}
+.kpi-trend{font-size:12px;margin-top:4px;}
+.kpi-trend.up{color:var(--green);}
+.kpi-trend.down{color:var(--red);}
+.kpi-trend.neutral{color:var(--muted);}
+
+/* CHART GRID */
+.chart-grid{display:grid;grid-template-columns:2fr 1fr;gap:16px;margin-bottom:16px;}
+.chart-card{
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:13px;overflow:hidden;
+}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:0.5px solid var(--border);
+}
+.card-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;}
+.card-subtitle{font-size:12px;color:var(--muted);}
+.card-body{padding:20px;}
+.chart-wrap{position:relative;height:220px;}
+
+/* BTW TABEL */
+.btw-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:0;}
+.btw-col{padding:14px 18px;border-right:0.5px solid var(--border);}
+.btw-col:last-child{border-right:none;}
+.btw-qtr{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1px;color:var(--muted);margin-bottom:12px;text-transform:uppercase;}
+.btw-row{display:flex;justify-content:space-between;font-size:12.5px;padding:4px 0;}
+.btw-row .lbl{color:var(--muted);}
+.btw-row .val{font-weight:500;color:var(--white);}
+.btw-row.total{border-top:0.5px solid var(--border);margin-top:6px;padding-top:8px;}
+.btw-row.total .lbl{color:var(--white);font-weight:500;}
+.btw-row.total .val{color:var(--amber);font-family:'Syne',sans-serif;font-weight:700;}
+.btw-row.aangifte{margin-top:4px;}
+.btw-row.aangifte .val{font-size:11px;color:var(--green);}
+
+/* BOTTOM GRID */
+.bottom-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+
+/* OPENSTAAND TABLE */
+.mini-table{width:100%;border-collapse:collapse;}
+.mini-table th{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:8px 0;border-bottom:0.5px solid var(--border);text-align:left;font-weight:500;}
+.mini-table th.r{text-align:right;}
+.mini-table td{padding:10px 0;border-bottom:0.5px solid var(--border);font-size:13px;color:var(--white);vertical-align:middle;}
+.mini-table td.r{text-align:right;}
+.mini-table tr:last-child td{border:none;}
+.mini-table tr:hover td{color:var(--blue2);}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;}
+.spill .d{width:4px;height:4px;border-radius:50%;}
+.s-a{background:rgba(245,158,11,.12);color:#f59e0b;}.s-a .d{background:#f59e0b;}
+.s-r{background:rgba(239,68,68,.12);color:#ef4444;}.s-r .d{background:#ef4444;}
+
+/* TOP KLANTEN */
+.tk-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:0.5px solid var(--border);}
+.tk-row:last-child{border:none;}
+.tk-av{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;flex-shrink:0;}
+.tk-name{font-size:13.5px;font-weight:500;color:#fff;flex:1;}
+.tk-amount{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fff;}
+.tk-bar-wrap{flex:1;height:4px;background:var(--surface2);border-radius:2px;margin:0 12px;}
+.tk-bar{height:4px;border-radius:2px;background:var(--blue);}
+
+/* EMPTY */
+.empty-mini{padding:32px;text-align:center;font-size:13px;color:var(--muted);}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:0.5px solid var(--green);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--white);box-shadow:0 4px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill">
+      <div class="cp-dot"></div>
+      <span>Mijn bedrijf</span>
+      <span class="chev">▾</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="app.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item" href="facturen.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+    </a>
+    <a class="nav-item" href="offertes.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="incasso.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="terugkerend.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="klanten.html">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item active" href="financieel.html">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item" href="bedrijfsprofiel.html">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="instellingen.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PAGE HEADER -->
+    <div class="page-header">
+      <div class="page-title">Financieel overzicht</div>
+      <div class="header-right">
+        <div class="period-select">
+          <div class="ps-opt active" onclick="setPeriod('jaar',this)">Jaar</div>
+          <div class="ps-opt" onclick="setPeriod('kwartaal',this)">Kwartaal</div>
+          <div class="ps-opt" onclick="setPeriod('maand',this)">Maand</div>
+        </div>
+        <select class="year-select" id="yearSelect" onchange="updateCharts()">
+          <option>2026</option>
+          <option>2025</option>
+          <option>2024</option>
+        </select>
+        <div class="btn-export" onclick="showToast('Exportbestand wordt aangemaakt...')">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporteren
+        </div>
+      </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi-card b">
+        <div class="kpi-label">Totale omzet</div>
+        <div class="kpi-value" id="kpiOmzet">€ 0</div>
+        <div class="kpi-sub" id="kpiOmzetSub">Nog geen facturen</div>
+        <div class="kpi-trend neutral" id="kpiOmzetTrend">Voeg facturen toe om te beginnen</div>
+      </div>
+      <div class="kpi-card g">
+        <div class="kpi-label">Ontvangen</div>
+        <div class="kpi-value" id="kpiOntvangen">€ 0</div>
+        <div class="kpi-sub" id="kpiOntvangenSub">0 facturen betaald</div>
+        <div class="kpi-trend neutral" id="kpiOntvangenTrend">Geen betalingen ontvangen</div>
+      </div>
+      <div class="kpi-card a">
+        <div class="kpi-label">Openstaand</div>
+        <div class="kpi-value" id="kpiOpen">€ 0</div>
+        <div class="kpi-sub" id="kpiOpenSub">0 facturen open</div>
+        <div class="kpi-trend neutral" id="kpiOpenTrend">Geen openstaande facturen</div>
+      </div>
+      <div class="kpi-card r">
+        <div class="kpi-label">BTW af te dragen</div>
+        <div class="kpi-value" id="kpiBtw">€ 0</div>
+        <div class="kpi-sub">Huidig kwartaal</div>
+        <div class="kpi-trend neutral" id="kpiBtwTrend">Nog geen BTW berekend</div>
+      </div>
+    </div>
+
+    <!-- CHART GRID -->
+    <div class="chart-grid">
+
+      <!-- OMZET GRAFIEK -->
+      <div class="chart-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Omzet per maand</div>
+            <div class="card-subtitle" id="chartSubtitle">2026 — geen data beschikbaar</div>
+          </div>
+          <div style="display:flex;gap:16px;align-items:center;">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+              <div style="width:10px;height:3px;background:var(--blue);border-radius:2px"></div> Omzet
+            </div>
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--muted)">
+              <div style="width:10px;height:3px;background:var(--green);border-radius:2px"></div> Ontvangen
+            </div>
+          </div>
+        </div>
+        <div class="card-body">
+          <div class="chart-wrap">
+            <canvas id="omzetChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- VERDELING DONUT -->
+      <div class="chart-card">
+        <div class="card-head">
+          <div>
+            <div class="card-title">Betalingsstatus</div>
+            <div class="card-subtitle">Verdeling huidig jaar</div>
+          </div>
+        </div>
+        <div class="card-body" style="display:flex;flex-direction:column;align-items:center;gap:16px;">
+          <div style="position:relative;width:160px;height:160px;">
+            <canvas id="statusChart"></canvas>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:#fff" id="donutTotal">0</div>
+              <div style="font-size:10px;color:var(--muted)">facturen</div>
+            </div>
+          </div>
+          <div style="width:100%;display:flex;flex-direction:column;gap:7px;" id="legendItems"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- BTW OVERZICHT -->
+    <div class="chart-card" style="margin-bottom:16px;">
+      <div class="card-head">
+        <div class="card-title">BTW-overzicht per kwartaal</div>
+        <div class="card-subtitle">Automatisch berekend op basis van verstuurde facturen</div>
+      </div>
+      <div class="btw-grid" id="btwGrid">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+
+    <!-- BOTTOM GRID -->
+    <div class="bottom-grid">
+
+      <!-- OPENSTAANDE POSTEN -->
+      <div class="chart-card">
+        <div class="card-head">
+          <div class="card-title">Openstaande posten</div>
+          <div class="card-subtitle" id="openSubtitle">Geen openstaande facturen</div>
+        </div>
+        <div class="card-body" id="openPostenBody">
+          <div class="empty-mini">Alle facturen zijn betaald of er zijn nog geen facturen aangemaakt.</div>
+        </div>
+      </div>
+
+      <!-- TOP KLANTEN -->
+      <div class="chart-card">
+        <div class="card-head">
+          <div class="card-title">Omzet per klant</div>
+          <div class="card-subtitle">Gerangschikt op totale omzet</div>
+        </div>
+        <div class="card-body" id="topKlantenBody">
+          <div class="empty-mini">Nog geen facturen om klantomzet te berekenen.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Opgeslagen</span>
+</div>
+
+<script>
+// ── LEGE DATA — wordt gevuld vanuit echte factuurdata ──
+const maanden = ['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+let activePeriod = 'jaar';
+
+function fmt(n){ return '€\u00a0'+n.toLocaleString('nl-NL',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+function fmtD(n){ return '€\u00a0'+n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+// ── CHART SETUP ──
+Chart.defaults.color = 'rgba(240,244,255,0.45)';
+Chart.defaults.font.family = 'DM Sans';
+Chart.defaults.font.size = 11;
+
+const omzetCtx = document.getElementById('omzetChart').getContext('2d');
+const omzetChart = new Chart(omzetCtx,{
+  type:'bar',
+  data:{
+    labels: maanden,
+    datasets:[
+      {
+        label:'Omzet',
+        data: new Array(12).fill(0),
+        backgroundColor:'rgba(36,86,255,0.25)',
+        borderColor:'rgba(36,86,255,0.8)',
+        borderWidth:1.5,
+        borderRadius:4,
+        borderSkipped:false,
+      },
+      {
+        label:'Ontvangen',
+        data: new Array(12).fill(0),
+        backgroundColor:'rgba(16,185,129,0.2)',
+        borderColor:'rgba(16,185,129,0.7)',
+        borderWidth:1.5,
+        borderRadius:4,
+        borderSkipped:false,
+        type:'line',
+        tension:0.4,
+        fill:false,
+        pointRadius:3,
+        pointBackgroundColor:'rgba(16,185,129,1)',
+      }
+    ]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,
+    interaction:{mode:'index',intersect:false},
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'rgba(13,18,36,0.95)',
+        borderColor:'rgba(240,244,255,0.13)',
+        borderWidth:1,
+        padding:10,
+        titleColor:'#fff',
+        bodyColor:'rgba(240,244,255,0.7)',
+        callbacks:{
+          label:(ctx)=>' '+ctx.dataset.label+': '+fmtD(ctx.raw)
+        }
+      }
+    },
+    scales:{
+      x:{grid:{color:'rgba(240,244,255,0.05)'},border:{color:'transparent'},ticks:{color:'rgba(240,244,255,0.4)'}},
+      y:{
+        grid:{color:'rgba(240,244,255,0.05)'},
+        border:{color:'transparent',dash:[4,4]},
+        ticks:{color:'rgba(240,244,255,0.4)',callback:v=>v===0?'€0':'€'+v.toLocaleString('nl-NL')},
+        beginAtZero:true,
+      }
+    }
+  }
+});
+
+const statusCtx = document.getElementById('statusChart').getContext('2d');
+const statusChart = new Chart(statusCtx,{
+  type:'doughnut',
+  data:{
+    labels:['Betaald','Openstaand','Verlopen','Concept','Incasso'],
+    datasets:[{
+      data:[0,0,0,0,0],
+      backgroundColor:['rgba(16,185,129,0.8)','rgba(245,158,11,0.8)','rgba(239,68,68,0.8)','rgba(255,255,255,0.15)','rgba(36,86,255,0.8)'],
+      borderColor:'rgba(7,11,24,0)',
+      borderWidth:3,
+      hoverOffset:6,
+    }]
+  },
+  options:{
+    responsive:true,maintainAspectRatio:false,cutout:'72%',
+    plugins:{
+      legend:{display:false},
+      tooltip:{
+        backgroundColor:'rgba(13,18,36,0.95)',
+        borderColor:'rgba(240,244,255,0.13)',
+        borderWidth:1,
+        padding:10,
+      }
+    }
+  }
+});
+
+// ── RENDER BTW GRID ──
+function renderBtwGrid(data){
+  const qtrs = ['Q1','Q2','Q3','Q4'];
+  document.getElementById('btwGrid').innerHTML = qtrs.map((q,i)=>{
+    const d = data[i]||{omzet:0,btw21:0,btw9:0,voorbelasting:0};
+    const afdragen = d.btw21 + d.btw9 - d.voorbelasting;
+    const gedaan = d.aangifteDatum;
+    return `
+    <div class="btw-col">
+      <div class="btw-qtr">${q} ${new Date().getFullYear()}</div>
+      <div class="btw-row"><span class="lbl">Omzet excl.</span><span class="val">${fmtD(d.omzet)}</span></div>
+      <div class="btw-row"><span class="lbl">BTW 21%</span><span class="val">${fmtD(d.btw21)}</span></div>
+      <div class="btw-row"><span class="lbl">BTW 9%</span><span class="val">${fmtD(d.btw9)}</span></div>
+      <div class="btw-row"><span class="lbl">Voorbelasting</span><span class="val" style="color:var(--green)">- ${fmtD(d.voorbelasting)}</span></div>
+      <div class="btw-row total"><span class="lbl">Af te dragen</span><span class="val">${fmtD(Math.max(0,afdragen))}</span></div>
+      <div class="btw-row aangifte"><span class="lbl"></span><span class="val">${gedaan ? '✓ Aangifte gedaan' : 'Nog niet gedaan'}</span></div>
+    </div>`; }).join('');
+}
+
+// ── RENDER OPENSTAANDE POSTEN ──
+function renderOpenPosten(posten){
+  const el = document.getElementById('openPostenBody');
+  if(!posten.length){ el.innerHTML='<div class="empty-mini">Geen openstaande facturen.</div>'; return; }
+  document.getElementById('openSubtitle').textContent = posten.length+' facturen openstaand';
+  el.innerHTML = `<table class="mini-table">
+    <thead><tr><th>Klant</th><th>Nummer</th><th class="r">Bedrag</th><th class="r">Status</th></tr></thead>
+    <tbody>${posten.map(p=>`
+    <tr>
+      <td>${p.klant}</td>
+      <td style="color:var(--muted);font-size:12px">${p.nummer}</td>
+      <td class="r" style="font-family:'Syne',sans-serif;font-weight:600">${fmtD(p.bedrag)}</td>
+      <td class="r"><span class="spill ${p.verlopen?'s-r':'s-a'}"><span class="d"></span>${p.verlopen?'Verlopen':'Openstaand'}</span></td>
+    </tr>`).join('')}
+    </tbody></table>`;
+}
+
+// ── RENDER TOP KLANTEN ──
+function renderTopKlanten(klanten){
+  const el = document.getElementById('topKlantenBody');
+  if(!klanten.length){ el.innerHTML='<div class="empty-mini">Nog geen klantomzet beschikbaar.</div>'; return; }
+  const max = Math.max(...klanten.map(k=>k.omzet),1);
+  el.innerHTML = klanten.slice(0,6).map(k=>`
+    <div class="tk-row">
+      <div class="tk-av" style="background:${k.color}22;color:${k.color}">${k.init}</div>
+      <div style="flex:1;min-width:0;">
+        <div class="tk-name">${k.naam}</div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:4px;">
+          <div class="tk-bar-wrap"><div class="tk-bar" style="width:${Math.round(k.omzet/max*100)}%;background:${k.color}"></div></div>
+        </div>
+      </div>
+      <div class="tk-amount">${fmtD(k.omzet)}</div>
+    </div>`).join('');
+}
+
+// ── UPDATE LEGEND ──
+function renderLegend(labels, data, total){
+  const colors = ['#10b981','#f59e0b','#ef4444','rgba(255,255,255,0.4)','#2456ff'];
+  document.getElementById('donutTotal').textContent = total;
+  document.getElementById('legendItems').innerHTML = labels.map((l,i)=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;font-size:12px;">
+      <div style="display:flex;align-items:center;gap:7px;color:var(--muted)">
+        <div style="width:8px;height:8px;border-radius:2px;background:${colors[i]};flex-shrink:0"></div>${l}
+      </div>
+      <span style="color:${data[i]>0?'#fff':'var(--muted2)'}; font-family:'Syne',sans-serif;font-weight:600">${data[i]}</span>
+    </div>`).join('');
+}
+
+// ── MAIN UPDATE — leeg bij start ──
+function updateCharts(){
+  // In productie: data ophalen van API gebaseerd op geselecteerd jaar/periode
+  // Nu: lege staat
+  const emptyMonths = new Array(12).fill(0);
+  omzetChart.data.datasets[0].data = emptyMonths;
+  omzetChart.data.datasets[1].data = emptyMonths;
+  omzetChart.update('none');
+
+  const emptyStatus = [0,0,0,0,0];
+  statusChart.data.datasets[0].data = emptyStatus;
+  statusChart.update('none');
+  renderLegend(['Betaald','Openstaand','Verlopen','Concept','Incasso'], emptyStatus, 0);
+
+  const emptyBtw = [{omzet:0,btw21:0,btw9:0,voorbelasting:0},{omzet:0,btw21:0,btw9:0,voorbelasting:0},{omzet:0,btw21:0,btw9:0,voorbelasting:0},{omzet:0,btw21:0,btw9:0,voorbelasting:0}];
+  renderBtwGrid(emptyBtw);
+  renderOpenPosten([]);
+  renderTopKlanten([]);
+
+  document.getElementById('kpiOmzet').textContent='€ 0';
+  document.getElementById('kpiOntvangen').textContent='€ 0';
+  document.getElementById('kpiOpen').textContent='€ 0';
+  document.getElementById('kpiBtw').textContent='€ 0';
+  document.getElementById('chartSubtitle').textContent = document.getElementById('yearSelect').value+' — geen data beschikbaar';
+}
+
+function setPeriod(p, el){
+  activePeriod = p;
+  document.querySelectorAll('.ps-opt').forEach(o=>o.classList.remove('active'));
+  el.classList.add('active');
+  updateCharts();
+}
+
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.style.borderColor=color||'var(--green)';
+  t.querySelector('.toast-dot').style.background=color||'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// INIT
+updateCharts();
+</script>
+</body>
+</html>

@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Factuur aanmaken</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:    #070b18;
+  --navy2:   #0d1224;
+  --navy3:   #111827;
+  --blue:    #2456ff;
+  --blue2:   #4f7aff;
+  --blue-g:  rgba(36,86,255,.12);
+  --white:   #f0f4ff;
+  --muted:   rgba(240,244,255,.45);
+  --muted2:  rgba(240,244,255,.22);
+  --border:  rgba(240,244,255,.07);
+  --border2: rgba(240,244,255,.13);
+  --surface: rgba(255,255,255,.04);
+  --surface2:rgba(255,255,255,.07);
+  --green:   #10b981;
+  --red:     #ef4444;
+  --amber:   #f59e0b;
+  --sidebar: 220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+/* ── TOPBAR ── */
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;z-index:10;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;transition:background .15s;}
+.company-pill:hover{background:var(--surface2)}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+/* ── LAYOUT ── */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* ── SIDEBAR ── */
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+
+/* ── SPLIT VIEW ── */
+.split{display:flex;flex:1;overflow:hidden;}
+.editor{flex:1;overflow-y:auto;padding:28px 32px;border-right:0.5px solid var(--border2);}
+.preview-pane{width:420px;flex-shrink:0;overflow-y:auto;background:var(--navy2);padding:24px;}
+
+/* ── PAGE HEADER ── */
+.page-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;}
+.page-title{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;color:#fff;}
+.breadcrumb{font-size:12px;color:var(--muted);margin-bottom:4px;}
+.breadcrumb a{color:var(--blue2);text-decoration:none;}
+.header-actions{display:flex;gap:8px;}
+.btn-primary{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:9px 18px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{display:flex;align-items:center;gap:6px;background:var(--surface);color:var(--white);border:0.5px solid var(--border2);border-radius:8px;padding:9px 14px;font-size:13px;cursor:pointer;transition:background .15s;}
+.btn-secondary:hover{background:var(--surface2);}
+.btn-ghost-sm{display:flex;align-items:center;gap:5px;background:transparent;color:var(--muted);border:0.5px solid var(--border2);border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;transition:all .15s;}
+.btn-ghost-sm:hover{color:var(--white);border-color:var(--border2);}
+
+/* ── FORM SECTIONS ── */
+.fsec{background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;overflow:hidden;margin-bottom:14px;}
+.fsec-head{display:flex;align-items:center;gap:10px;padding:13px 18px;border-bottom:0.5px solid var(--border);}
+.fsec-icon{width:28px;height:28px;border-radius:7px;background:var(--blue-g);border:0.5px solid rgba(36,86,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.fsec-icon svg{width:13px;height:13px;stroke:var(--blue2);fill:none;stroke-width:1.8;}
+.fsec-title{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fff;}
+.fsec-body{padding:16px 18px;display:flex;flex-direction:column;gap:12px;}
+.field-row{display:grid;gap:10px;}
+.field-row.c2{grid-template-columns:1fr 1fr;}
+.field-row.c3{grid-template-columns:1fr 1fr 1fr;}
+.field-row.c4{grid-template-columns:2fr 1fr 1fr 1fr;}
+.field{display:flex;flex-direction:column;gap:5px;}
+.field label{font-size:11px;font-weight:500;color:var(--muted);letter-spacing:.3px;}
+.field label .req{color:var(--red);margin-left:1px;}
+.field input,.field select,.field textarea{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:7px;padding:8px 11px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;transition:border-color .15s,background .15s;outline:none;width:100%;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
+.field input::placeholder{color:var(--muted2);}
+.field select option{background:var(--navy3);color:var(--white);}
+
+/* ── KLANT SELECT ── */
+.klant-select-wrap{position:relative;}
+.klant-select-box{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(255,255,255,.05);border:0.5px solid var(--border2);
+  border-radius:8px;padding:10px 14px;cursor:pointer;
+  transition:all .15s;
+}
+.klant-select-box:hover{background:var(--surface2);border-color:rgba(36,86,255,.3);}
+.klant-avatar{width:34px;height:34px;border-radius:8px;background:var(--blue-g);border:0.5px solid rgba(36,86,255,.25);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--blue2);flex-shrink:0;}
+.klant-info{flex:1;}
+.klant-naam{font-size:13.5px;font-weight:500;color:#fff;}
+.klant-detail{font-size:11.5px;color:var(--muted);}
+.klant-change{font-size:12px;color:var(--blue2);cursor:pointer;white-space:nowrap;}
+.klant-dropdown{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:50;
+  background:var(--navy3);border:0.5px solid var(--border2);border-radius:10px;
+  overflow:hidden;display:none;
+  box-shadow:0 8px 32px rgba(0,0,0,.4);
+}
+.klant-dropdown.open{display:block;}
+.kd-search{padding:10px 14px;border-bottom:0.5px solid var(--border);}
+.kd-search input{background:var(--surface);border:0.5px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
+.kd-search input::placeholder{color:var(--muted2);}
+.kd-list{}
+.kd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .12s;}
+.kd-item:hover{background:var(--surface2);}
+.kd-av{width:28px;height:28px;border-radius:6px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:10px;font-weight:700;color:var(--muted);flex-shrink:0;}
+.kd-naam{font-size:13px;color:var(--white);}
+.kd-email{font-size:11px;color:var(--muted);}
+.kd-new{display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;border-top:0.5px solid var(--border);color:var(--blue2);font-size:13px;transition:background .12s;}
+.kd-new:hover{background:var(--blue-g);}
+
+/* ── REGELITEMS ── */
+.regels-header{display:grid;grid-template-columns:1fr 70px 90px 100px 36px;gap:8px;padding:0 0 8px;border-bottom:0.5px solid var(--border);}
+.regels-header span{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.regels-header .right{text-align:right;}
+.regel-row{display:grid;grid-template-columns:1fr 70px 90px 100px 36px;gap:8px;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border);}
+.regel-row:last-child{border:none;}
+.regel-omschrijving{}
+.regel-input{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:12.5px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .15s,background .15s;}
+.regel-input:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
+.regel-input.right{text-align:right;}
+.regel-input::placeholder{color:var(--muted2);}
+.regel-subtotal{font-size:13px;font-weight:500;color:#fff;text-align:right;font-family:'Syne',sans-serif;}
+.regel-del{width:28px;height:28px;background:transparent;border:0.5px solid transparent;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;flex-shrink:0;}
+.regel-del:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.25);color:var(--red);}
+.regel-del svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2.5;}
+.add-regel-btn{display:flex;align-items:center;gap:7px;background:transparent;border:0.5px dashed var(--border2);border-radius:7px;padding:9px 14px;font-size:13px;color:var(--muted);cursor:pointer;margin-top:10px;width:100%;transition:all .15s;}
+.add-regel-btn:hover{border-color:var(--blue2);color:var(--blue2);background:var(--blue-g);}
+.add-regel-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2.5;}
+
+/* ── TOTALS ── */
+.totals-block{margin-top:4px;display:flex;flex-direction:column;gap:0;align-items:flex-end;}
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;gap:60px;width:280px;}
+.total-row .lbl{font-size:13px;color:var(--muted);}
+.total-row .val{font-size:13px;color:var(--white);font-weight:500;text-align:right;min-width:80px;}
+.total-row.main-total{border-top:0.5px solid var(--border2);margin-top:6px;padding-top:12px;}
+.total-row.main-total .lbl{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.total-row.main-total .val{font-family:'Syne',sans-serif;font-size:18px;font-weight:800;color:#fff;}
+
+/* ── BTW SELECT IN REGEL ── */
+.btw-select{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:6px;padding:7px 6px;font-size:12px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .15s;}
+.btw-select:focus{border-color:rgba(36,86,255,.5);}
+.btw-select option{background:var(--navy3);}
+
+/* ── PREVIEW PANE ── */
+.preview-label{font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px;}
+.preview-label .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.invoice-preview{background:#fff;border-radius:8px;overflow:hidden;font-family:'DM Sans',sans-serif;}
+.inv-head{background:#080c1a;padding:20px 24px 16px;display:flex;justify-content:space-between;align-items:flex-start;}
+.inv-logo-t{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:#fff;letter-spacing:-.5px;line-height:1;}
+.inv-logo-sub{font-size:8px;letter-spacing:2.5px;text-transform:uppercase;color:rgba(255,255,255,.3);margin-top:3px;}
+.inv-head-right{text-align:right;}
+.inv-head-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
+.inv-head-num{font-size:11px;color:rgba(255,255,255,.4);margin-top:2px;}
+.inv-accent{height:2px;background:linear-gradient(90deg,#2456ff,#7c3aed 60%,transparent);}
+.inv-meta{background:#f5f6fa;padding:10px 24px;display:flex;gap:0;border-bottom:1px solid #eaedf5;}
+.inv-meta-b{flex:1;padding-right:16px;}
+.inv-meta-l{font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;margin-bottom:2px;}
+.inv-meta-v{font-size:11px;color:#111827;font-weight:500;}
+.inv-parties{padding:14px 24px;display:grid;grid-template-columns:1fr 1fr;gap:20px;border-bottom:1px solid #eaedf5;}
+.inv-party-label{font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:#2456ff;font-weight:700;margin-bottom:5px;}
+.inv-party-name{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#080c1a;margin-bottom:3px;}
+.inv-party-detail{font-size:10px;color:#6b7280;line-height:1.6;}
+.inv-items-head{display:grid;grid-template-columns:1fr 50px 65px 70px;padding:7px 24px;gap:0;font-size:8px;letter-spacing:1px;text-transform:uppercase;color:#9ca3af;border-bottom:1.5px solid #080c1a;}
+.inv-items-head .r{text-align:right;}
+.inv-item-row{display:grid;grid-template-columns:1fr 50px 65px 70px;padding:8px 24px;gap:0;font-size:10.5px;border-bottom:1px solid #f0f1f5;align-items:center;}
+.inv-item-row .desc{color:#111827;font-weight:500;}
+.inv-item-row .num{color:#374151;text-align:right;}
+.inv-totals-wrap{padding:10px 24px 14px;display:flex;justify-content:flex-end;background:#f5f6fa;border-top:1px solid #eaedf5;}
+.inv-totals-inner{width:160px;}
+.inv-tot-row{display:flex;justify-content:space-between;padding:3px 0;font-size:10px;color:#6b7280;}
+.inv-tot-row .v{font-weight:500;color:#374151;}
+.inv-tot-row.main{border-top:1.5px solid #080c1a;margin-top:5px;padding-top:7px;}
+.inv-tot-row.main .l{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:#080c1a;}
+.inv-tot-row.main .v{font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:#080c1a;}
+.inv-foot{background:#080c1a;padding:12px 24px;display:flex;justify-content:space-between;align-items:center;}
+.inv-foot-iban{font-size:9px;color:rgba(255,255,255,.35);}
+.inv-foot-iban strong{color:#fff;font-size:10px;display:block;margin-bottom:2px;font-family:'Syne',sans-serif;}
+.inv-watermark{background:#f0f4ff;border-top:1px solid #dde3f5;padding:5px 24px;text-align:center;font-size:9px;color:#9ca3af;}
+.inv-watermark span{color:#2456ff;font-weight:700;}
+
+/* ── STATUS TOGGLE ── */
+.status-row{display:flex;gap:8px;flex-wrap:wrap;}
+.status-chip{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:20px;padding:5px 14px;font-size:12px;color:var(--muted);
+  cursor:pointer;transition:all .15s;
+}
+.status-chip:hover{background:var(--surface2);}
+.status-chip.sel{border-color:rgba(36,86,255,.4);color:#fff;background:var(--blue-g);}
+.status-chip .dot{width:6px;height:6px;border-radius:50%;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:0.5px solid var(--green);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--white);box-shadow:0 4px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill">
+      <div class="cp-dot"></div>
+      <span>Mijn bedrijf</span>
+      <span class="chev">▾</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item" href="bedrijfsprofiel.html">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+  </nav>
+
+  <!-- SPLIT VIEW -->
+  <div class="split">
+
+    <!-- LEFT: EDITOR -->
+    <div class="editor">
+      <div class="page-header">
+        <div>
+          <div class="breadcrumb"><a href="#">Facturen</a> / Nieuwe factuur</div>
+          <div class="page-title">Factuur aanmaken</div>
+        </div>
+        <div class="header-actions">
+          <button class="btn-secondary" onclick="showToast('Concept opgeslagen')">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Concept opslaan
+          </button>
+          <button class="btn-primary" onclick="sendInvoice()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+            Factuur versturen
+          </button>
+        </div>
+      </div>
+
+      <!-- KLANT -->
+      <div class="fsec">
+        <div class="fsec-head">
+          <div class="fsec-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg></div>
+          <div class="fsec-title">Klant</div>
+        </div>
+        <div class="fsec-body">
+          <div class="klant-select-wrap">
+            <div class="klant-select-box" onclick="toggleDropdown()">
+              <div class="klant-avatar" id="klantAv" style="background:var(--surface2);color:var(--muted)">?</div>
+              <div class="klant-info">
+                <div class="klant-naam" id="klantNaam" style="color:var(--muted)">Selecteer een klant...</div>
+                <div class="klant-detail" id="klantDetail"></div>
+              </div>
+              <div class="klant-change">Wijzigen ▾</div>
+            </div>
+            <div class="klant-dropdown" id="klantDropdown">
+              <div class="kd-search"><input type="text" placeholder="Klant zoeken..." oninput="filterKlanten(this.value)"></div>
+              <div class="kd-list" id="kdList">
+                <div style="padding:16px;text-align:center;font-size:13px;color:var(--muted)">Nog geen klanten. Voeg eerst een klant toe.</div>
+              </div>
+              <div class="kd-new" onclick="showToast('Nieuw klantformulier geopend')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Nieuwe klant aanmaken
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FACTUURDETAILS -->
+      <div class="fsec">
+        <div class="fsec-head">
+          <div class="fsec-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+          <div class="fsec-title">Factuurdetails</div>
+        </div>
+        <div class="fsec-body">
+          <div class="field-row c3">
+            <div class="field">
+              <label>Factuurnummer <span class="req">*</span></label>
+              <input type="text" id="invNum" value="" placeholder="F-2026-001" oninput="updatePreview()">
+            </div>
+            <div class="field">
+              <label>Factuurdatum <span class="req">*</span></label>
+              <input type="date" id="invDate" value="" oninput="updatePreview()">
+            </div>
+            <div class="field">
+              <label>Vervaldatum <span class="req">*</span></label>
+              <input type="date" id="invDue" value="" oninput="updatePreview()">
+            </div>
+          </div>
+          <div class="field-row c2">
+            <div class="field">
+              <label>Referentie / projectnaam</label>
+              <input type="text" id="invRef" placeholder="Bijv. Project Q2 2026" oninput="updatePreview()">
+            </div>
+            <div class="field">
+              <label>Bedrijfsprofiel <span class="req">*</span></label>
+              <select id="invCompany" onchange="updatePreview()">
+                <option selected>Mijn bedrijf</option>
+                <option>Webshop B.V.</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGELITEMS -->
+      <div class="fsec">
+        <div class="fsec-head">
+          <div class="fsec-icon"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></div>
+          <div class="fsec-title">Regelitems</div>
+        </div>
+        <div class="fsec-body">
+          <div class="regels-header">
+            <span>Omschrijving</span>
+            <span class="right">Aantal</span>
+            <span class="right">Prijs</span>
+            <span class="right">BTW</span>
+            <span></span>
+          </div>
+          <div id="regelsList">
+            <div class="regel-row" data-id="1">
+              <div class="regel-omschrijving">
+                <input class="regel-input" type="text" placeholder="Omschrijving regelitem..." oninput="calcTotals()">
+              </div>
+              <input class="regel-input right" type="number" value="1" min="0" step="0.5" oninput="calcTotals()">
+              <input class="regel-input right" type="number" value="" placeholder="0.00" min="0" step="0.01" oninput="calcTotals()">
+              <select class="btw-select" onchange="calcTotals()">
+                <option>0%</option><option>9%</option><option selected>21%</option><option>Vrij</option>
+              </select>
+              <button class="regel-del" onclick="deleteRegel(this)" title="Verwijderen">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+              </button>
+            </div>
+          <button class="add-regel-btn" onclick="addRegel()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Regelitem toevoegen
+          </button>
+          <div class="totals-block" id="totalsBlock">
+            <div class="total-row"><span class="lbl">Subtotaal</span><span class="val" id="subtotalVal">€ 0,00</span></div>
+            <div class="total-row"><span class="lbl">BTW 21%</span><span class="val" id="btwVal">€ 0,00</span></div>
+            <div class="total-row main-total"><span class="lbl">Totaal</span><span class="val" id="totalVal">€ 0,00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VERZENDOPTIES -->
+      <div class="fsec">
+        <div class="fsec-head">
+          <div class="fsec-icon"><svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg></div>
+          <div class="fsec-title">Verzendopties</div>
+        </div>
+        <div class="fsec-body">
+          <div class="field-row c2">
+            <div class="field">
+              <label>Versturen via</label>
+              <select>
+                <option selected>E-mail (direct naar klant)</option>
+                <option>Alleen PDF downloaden</option>
+                <option>E-mail + PDF</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>E-mailadres klant</label>
+              <input type="email" placeholder="klant@bedrijf.nl">
+            </div>
+          </div>
+          <div class="field">
+            <label>Persoonlijk bericht (optioneel)</label>
+            <textarea rows="2" placeholder="Eventueel een persoonlijk bericht aan de klant..."></textarea>
+          </div>
+          <div class="field">
+            <label>Betaalmethode op factuur</label>
+            <div class="status-row">
+              <div class="status-chip sel" onclick="toggleChip(this)">
+                <div class="dot" style="background:#2456ff"></div> iDEAL betaallink
+              </div>
+              <div class="status-chip" onclick="toggleChip(this)">
+                <div class="dot" style="background:#10b981"></div> SEPA-incasso
+              </div>
+              <div class="status-chip" onclick="toggleChip(this)">
+                <div class="dot" style="background:var(--muted)"></div> Bankoverschrijving
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT: PREVIEW -->
+    <div class="preview-pane">
+      <div class="preview-label">
+        <span class="dot"></span>
+        Live voorvertoning
+      </div>
+      <div class="invoice-preview">
+        <div class="inv-head">
+          <div>
+            <div class="inv-logo-t">CDS<span style="color:#2456ff">·</span></div>
+            <div class="inv-logo-sub">Mijn bedrijf</div>
+          </div>
+          <div class="inv-head-right">
+            <div class="inv-head-title">Factuur</div>
+            <div class="inv-head-num" id="prevNum">—</div>
+          </div>
+        </div>
+        <div class="inv-accent"></div>
+        <div class="inv-meta">
+          <div class="inv-meta-b"><div class="inv-meta-l">Datum</div><div class="inv-meta-v" id="prevDate">—</div></div>
+          <div class="inv-meta-b"><div class="inv-meta-l">Vervaldatum</div><div class="inv-meta-v" id="prevDue">—</div></div>
+          <div class="inv-meta-b"><div class="inv-meta-l">Referentie</div><div class="inv-meta-v" id="prevRef" style="color:#9ca3af">—</div></div>
+        </div>
+        <div class="inv-parties">
+          <div>
+            <div class="inv-party-label">Van</div>
+            <div class="inv-party-name" id="prevFrom">Mijn bedrijf</div>
+            <div class="inv-party-detail">Kanaleneiland 14, Utrecht<br>KvK 87654321 · BTW NL123456789B01</div>
+          </div>
+          <div>
+            <div class="inv-party-label">Aan</div>
+            <div class="inv-party-name" id="prevTo" style="color:#9ca3af">Selecteer een klant</div>
+            <div class="inv-party-detail" id="prevToDetail"></div>
+          </div>
+        </div>
+        <div class="inv-items-head">
+          <span>Omschrijving</span><span class="r">Aant.</span><span class="r">Prijs</span><span class="r">Bedrag</span>
+        </div>
+        <div id="prevItems"></div>
+        <div class="inv-totals-wrap">
+          <div class="inv-totals-inner">
+            <div class="inv-tot-row"><span class="l">Subtotaal</span><span class="v" id="prevSub">€ 0,00</span></div>
+            <div class="inv-tot-row"><span class="l">BTW 21%</span><span class="v" id="prevBtw">€ 0,00</span></div>
+            <div class="inv-tot-row main"><span class="l">Totaal</span><span class="v" id="prevTotal">€ 0,00</span></div>
+          </div>
+        </div>
+        <div class="inv-foot">
+          <div class="inv-foot-iban">
+            <strong>NL91 ABNA 0417 1643 00</strong>
+            t.n.v. Cornelissen Digital Studio
+          </div>
+          <div style="font-size:9px;color:rgba(255,255,255,.25)">iDEAL</div>
+        </div>
+        <div class="inv-watermark">Powered by <span>CDS Facturen</span></div>
+      </div>
+    </div>
+
+  </div><!-- /split -->
+</div><!-- /app-body -->
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Opgeslagen</span>
+</div>
+
+<script>
+// ── TOAST ──
+function showToast(msg, color) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.style.borderColor = color || 'var(--green)';
+  t.querySelector('.toast-dot').style.background = color || 'var(--green)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── KLANT DROPDOWN ──
+function toggleDropdown() {
+  document.getElementById('klantDropdown').classList.toggle('open');
+}
+document.addEventListener('click', e => {
+  if (!e.target.closest('.klant-select-wrap')) {
+    document.getElementById('klantDropdown').classList.remove('open');
+  }
+});
+function selectKlant(naam, email, init, color) {
+  document.getElementById('klantNaam').textContent = naam;
+  document.getElementById('klantDetail').textContent = email;
+  document.getElementById('klantAv').textContent = init;
+  document.getElementById('klantAv').style.background = color + '22';
+  document.getElementById('klantAv').style.color = color;
+  document.getElementById('prevTo').textContent = naam;
+  document.getElementById('prevToDetail').textContent = email;
+  document.getElementById('klantDropdown').classList.remove('open');
+  calcTotals();
+}
+function filterKlanten(q) {
+  document.querySelectorAll('.kd-item').forEach(item => {
+    item.style.display = item.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+// ── CALCULATE TOTALS ──
+function fmt(n) { return '€\u00a0' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.'); }
+
+function calcTotals() {
+  const rows = document.querySelectorAll('.regel-row');
+  let sub = 0, btw = 0;
+  const previewItems = [];
+  rows.forEach(row => {
+    const inputs = row.querySelectorAll('input');
+    const qty = parseFloat(inputs[1].value) || 0;
+    const price = parseFloat(inputs[2].value) || 0;
+    const btwSel = row.querySelector('select').value;
+    const btwRate = btwSel === '21%' ? 0.21 : btwSel === '9%' ? 0.09 : 0;
+    const lineTotal = qty * price;
+    const lineBtw = lineTotal * btwRate;
+    sub += lineTotal;
+    btw += lineBtw;
+    previewItems.push({ desc: inputs[0].value || 'Regelitem', qty, price, total: lineTotal });
+  });
+  const total = sub + btw;
+  document.getElementById('subtotalVal').textContent = fmt(sub);
+  document.getElementById('btwVal').textContent = fmt(btw);
+  document.getElementById('totalVal').textContent = fmt(total);
+  document.getElementById('prevSub').textContent = fmt(sub);
+  document.getElementById('prevBtw').textContent = fmt(btw);
+  document.getElementById('prevTotal').textContent = fmt(total);
+
+  // Update preview items
+  const container = document.getElementById('prevItems');
+  container.innerHTML = previewItems.map(i => `
+    <div class="inv-item-row">
+      <div class="desc">${i.desc.substring(0,32)}${i.desc.length>32?'…':''}</div>
+      <div class="num">${i.qty}</div>
+      <div class="num">${fmt(i.price)}</div>
+      <div class="num">${fmt(i.total)}</div>
+    </div>`).join('');
+}
+
+// ── ADD / DELETE REGEL ──
+let regelId = 10;
+function addRegel() {
+  regelId++;
+  const div = document.createElement('div');
+  div.className = 'regel-row';
+  div.dataset.id = regelId;
+  div.innerHTML = `
+    <div class="regel-omschrijving"><input class="regel-input" type="text" placeholder="Omschrijving regelitem..." oninput="calcTotals()"></div>
+    <input class="regel-input right" type="number" value="1" min="0" step="0.5" oninput="calcTotals()">
+    <input class="regel-input right" type="number" value="0.00" min="0" step="0.01" oninput="calcTotals()">
+    <select class="btw-select" onchange="calcTotals()">
+      <option>0%</option><option>9%</option><option selected>21%</option><option>Vrij</option>
+    </select>
+    <button class="regel-del" onclick="deleteRegel(this)" title="Verwijderen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="12" height="12"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+    </button>`;
+  document.getElementById('regelsList').appendChild(div);
+  div.querySelector('input').focus();
+  calcTotals();
+}
+function deleteRegel(btn) {
+  const row = btn.closest('.regel-row');
+  if (document.querySelectorAll('.regel-row').length > 1) {
+    row.remove(); calcTotals();
+  } else {
+    showToast('Minimaal één regelitem vereist', 'var(--amber)');
+  }
+}
+
+// ── UPDATE PREVIEW META ──
+function updatePreview() {
+  document.getElementById('prevNum').textContent = document.getElementById('invNum').value;
+  document.getElementById('prevFrom').textContent = document.getElementById('invCompany').value;
+  const ref = document.getElementById('invRef').value;
+  const prevRef = document.getElementById('prevRef');
+  prevRef.textContent = ref || '—';
+  prevRef.style.color = ref ? '#111827' : '#9ca3af';
+
+  const d = new Date(document.getElementById('invDate').value);
+  const due = new Date(document.getElementById('invDue').value);
+  const opts = { day: 'numeric', month: 'short', year: 'numeric' };
+  document.getElementById('prevDate').textContent = isNaN(d) ? '' : d.toLocaleDateString('nl-NL', opts);
+  document.getElementById('prevDue').textContent = isNaN(due) ? '' : due.toLocaleDateString('nl-NL', opts);
+}
+
+// ── STATUS CHIPS ──
+function toggleChip(el) { el.classList.toggle('sel'); }
+
+// ── SEND ──
+function sendInvoice() {
+  showToast('Factuur F-2026-042 verstuurd naar klant');
+  setTimeout(() => { document.querySelector('.btn-primary').textContent = '✓ Verstuurd'; }, 300);
+}
+
+// Init
+calcTotals();
+updatePreview();
+</script>
+</body>
+</html>

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Offertes</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#070b18;--navy2:#0d1224;--navy3:#111827;
+  --blue:#2456ff;--blue2:#4f7aff;--blue-g:rgba(36,86,255,.12);
+  --white:#f0f4ff;--muted:rgba(240,244,255,.45);--muted2:rgba(240,244,255,.22);
+  --border:rgba(240,244,255,.07);--border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;transition:background .15s;}
+.company-pill:hover{background:var(--surface2)}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
+
+/* PAGE HEADER */
+.page-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:22px 32px 0;flex-shrink:0;
+}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;}
+.btn-primary{
+  display:flex;align-items:center;gap:7px;
+  background:var(--blue);color:#fff;border:none;border-radius:9px;
+  padding:10px 22px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;letter-spacing:.2px;
+}
+.btn-primary:hover{opacity:.86}
+
+/* TOOLBAR */
+.toolbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 32px 14px;gap:12px;flex-shrink:0;
+  border-bottom:0.5px solid var(--border2);
+}
+.toolbar-left{display:flex;align-items:center;gap:8px;}
+.tb-btn{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:8px;padding:7px 14px;font-size:13px;color:var(--muted);
+  cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.tb-btn:hover{background:var(--surface2);color:var(--white);}
+.tb-btn.active-filter{background:var(--blue-g);border-color:rgba(36,86,255,.35);color:var(--blue2);}
+.tb-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+.tb-sep{width:1px;height:20px;background:var(--border2);}
+.search-wrap{position:relative;}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;pointer-events:none;}
+.search-input{background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:7px 12px 7px 32px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;width:260px;}
+.search-input:focus{border-color:rgba(36,86,255,.4);}
+.search-input::placeholder{color:var(--muted2);}
+
+/* STATUS TABS */
+.status-tabs{
+  display:flex;align-items:center;gap:0;
+  padding:0 32px;border-bottom:0.5px solid var(--border2);
+  flex-shrink:0;overflow-x:auto;
+}
+.status-tabs::-webkit-scrollbar{display:none}
+.stab{
+  display:flex;align-items:center;gap:6px;
+  padding:11px 16px;font-size:13px;color:var(--muted);
+  cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .15s;white-space:nowrap;margin-bottom:-0.5px;
+}
+.stab:hover{color:var(--white);}
+.stab.active{color:#fff;border-bottom-color:var(--blue);}
+.stab-count{
+  font-size:10px;font-weight:700;
+  background:var(--surface2);
+  border-radius:20px;padding:1px 7px;
+  color:var(--muted);
+}
+.stab.active .stab-count{background:var(--blue-g);color:var(--blue2);}
+
+/* TABLE */
+.table-wrap{flex:1;overflow-y:auto;}
+.fact-table{width:100%;border-collapse:collapse;}
+.fact-table th{
+  text-align:left;font-size:10px;font-weight:600;
+  letter-spacing:1px;text-transform:uppercase;color:var(--muted);
+  padding:10px 16px 10px;border-bottom:0.5px solid var(--border2);
+  background:var(--navy2);position:sticky;top:0;z-index:2;
+  white-space:nowrap;
+}
+.fact-table th.r{text-align:right;}
+.fact-table th:first-child{padding-left:32px;width:40px;}
+.fact-table th:last-child{padding-right:32px;}
+.fact-table td{
+  padding:14px 16px;border-bottom:0.5px solid var(--border);
+  font-size:13.5px;color:var(--white);vertical-align:middle;
+}
+.fact-table td:first-child{padding-left:32px;}
+.fact-table td:last-child{padding-right:32px;}
+.fact-table tr:hover td{background:var(--surface);}
+.fact-table tr.selected td{background:var(--blue-g);}
+.fact-table td.r{text-align:right;}
+
+/* CHECKBOX */
+.cb-wrap{display:flex;align-items:center;justify-content:center;}
+input[type=checkbox]{
+  width:15px;height:15px;
+  accent-color:var(--blue);cursor:pointer;
+}
+
+/* FACTUUR CELLS */
+.f-num{font-family:'Syne',sans-serif;font-size:12px;color:var(--muted);display:block;}
+.f-date{font-size:13px;color:var(--white);}
+.f-client{font-size:13.5px;font-weight:500;}
+.f-client-type{font-size:11px;color:var(--muted);margin-top:1px;}
+.f-desc{font-size:13.5px;color:var(--white);}
+.f-company{font-size:11px;color:var(--muted);margin-top:2px;}
+.f-amount{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;}
+.f-amount-btw{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* STATUS PILLS */
+.spill{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;}
+.spill .d{width:5px;height:5px;border-radius:50%;}
+.s-g{background:rgba(16,185,129,.12);color:#10b981;}
+.s-g .d{background:#10b981;}
+.s-a{background:rgba(245,158,11,.12);color:#f59e0b;}
+.s-a .d{background:#f59e0b;}
+.s-r{background:rgba(239,68,68,.12);color:#ef4444;}
+.s-r .d{background:#ef4444;}
+.s-b{background:rgba(36,86,255,.12);color:#4f7aff;}
+.s-b .d{background:#4f7aff;}
+.s-gray{background:rgba(255,255,255,.07);color:var(--muted);}
+.s-gray .d{background:var(--muted);}
+
+/* ROW ACTIONS */
+.row-actions{display:flex;align-items:center;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .15s;}
+.fact-table tr:hover .row-actions{opacity:1;}
+.ra-btn{
+  background:var(--surface2);border:0.5px solid var(--border2);
+  color:var(--muted);border-radius:6px;padding:4px 10px;
+  font-size:11.5px;cursor:pointer;transition:all .15s;white-space:nowrap;
+}
+.ra-btn:hover{color:var(--white);border-color:var(--border2);}
+.ra-btn.danger:hover{color:var(--red);border-color:rgba(239,68,68,.3);}
+
+/* EMPTY STATE */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;
+  justify-content:center;flex:1;padding:60px 24px;text-align:center;
+}
+.es-icon{
+  width:60px;height:60px;border-radius:16px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;margin:0 auto 20px;
+}
+.es-icon svg{width:26px;height:26px;stroke:var(--muted);fill:none;stroke-width:1.4;}
+.es-title{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;color:#fff;margin-bottom:8px;}
+.es-sub{font-size:13.5px;color:var(--muted);line-height:1.65;max-width:320px;margin:0 auto 24px;}
+
+/* BULK BAR */
+.bulk-bar{
+  position:sticky;bottom:0;
+  background:rgba(13,18,36,.95);
+  backdrop-filter:blur(12px);
+  border-top:0.5px solid var(--border2);
+  padding:12px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  transform:translateY(100%);
+  transition:transform .2s;
+  flex-shrink:0;
+}
+.bulk-bar.show{transform:translateY(0);}
+.bulk-bar-left{font-size:13px;color:var(--muted);}
+.bulk-bar-left strong{color:#fff;}
+.bulk-actions{display:flex;gap:8px;}
+.bulk-btn{
+  display:flex;align-items:center;gap:5px;
+  background:var(--surface2);border:0.5px solid var(--border2);
+  color:var(--white);border-radius:7px;padding:7px 14px;
+  font-size:12.5px;cursor:pointer;transition:all .15s;
+}
+.bulk-btn:hover{background:rgba(255,255,255,.1);}
+.bulk-btn.danger{color:var(--red);border-color:rgba(239,68,68,.25);}
+.bulk-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:2;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:0.5px solid var(--green);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--white);box-shadow:0 4px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill">
+      <div class="cp-dot"></div>
+      <span id="activeBedrijf">Selecteer bedrijf</span>
+      <span class="chev">▾</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="app.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item active" href="facturen.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+      <span class="nav-badge" id="sidebarBadge" style="display:none">0</span>
+    </a>
+    <a class="nav-item" href="offertes.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="incasso.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="terugkerend.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="klanten.html">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item" href="financieel.html">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item" href="bedrijfsprofiel.html">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="instellingen.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+  </nav>
+
+  <!-- MAIN -->
+  <div class="main">
+
+    <!-- PAGE HEADER -->
+    <div class="page-head">
+      <div class="page-title">Facturen</div>
+      <button class="btn-primary" onclick="window.location.href='factuur-aanmaken.html'">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Nieuwe offerte
+      </button>
+    </div>
+
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="tb-btn" id="btnAlle" onclick="setFilter('alle',this)">
+          <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          Alle
+        </div>
+        <div class="tb-sep"></div>
+        <div class="tb-btn" onclick="exportFacturen()">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporteren
+        </div>
+      </div>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="search-input" type="text" placeholder="Zoek op klant, nummer of omschrijving..." oninput="searchFacturen(this.value)" id="searchInput">
+      </div>
+    </div>
+
+    <!-- STATUS TABS -->
+    <div class="status-tabs">
+      <div class="stab active" id="tab-alle" onclick="switchTab('alle')">
+        Alle <span class="stab-count" id="cnt-alle">0</span>
+      </div>
+      <div class="stab" id="tab-concept" onclick="switchTab('concept')">
+        Concept <span class="stab-count" id="cnt-concept">0</span>
+      </div>
+      <div class="stab" id="tab-open" onclick="switchTab('open')">
+        Openstaand <span class="stab-count" id="cnt-open">0</span>
+      </div>
+      <div class="stab" id="tab-betaald" onclick="switchTab('betaald')">
+        Betaald <span class="stab-count" id="cnt-betaald">0</span>
+      </div>
+      <div class="stab" id="tab-verlopen" onclick="switchTab('verlopen')">
+        Verlopen <span class="stab-count" id="cnt-verlopen">0</span>
+      </div>
+      <div class="stab" id="tab-incasso" onclick="switchTab('incasso')">
+        Incasso <span class="stab-count" id="cnt-incasso">0</span>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="table-wrap" id="tableWrap">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- BULK BAR -->
+    <div class="bulk-bar" id="bulkBar">
+      <div class="bulk-bar-left"><strong id="bulkCount">0</strong> geselecteerd</div>
+      <div class="bulk-actions">
+        <div class="bulk-btn" onclick="bulkAction('herinnering')">
+          <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+          Herinnering sturen
+        </div>
+        <div class="bulk-btn" onclick="bulkAction('export')">
+          <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exporteren
+        </div>
+        <div class="bulk-btn danger" onclick="bulkAction('verwijder')">
+          <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+          Verwijderen
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Opgeslagen</span>
+</div>
+
+<script>
+// ── DATA — leeg bij eerste gebruik ──
+let facturen = [];
+let activeTab = 'alle';
+let selectedIds = new Set();
+let searchQuery = '';
+
+// ── HELPERS ──
+function fmt(n){
+  return '€\u00a0' + n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});
+}
+function fmtDate(iso){
+  const d = new Date(iso);
+  return d.toLocaleDateString('nl-NL',{day:'2-digit',month:'2-digit',year:'numeric'});
+}
+function statusPill(s){
+  const cfg = {
+    concept: ['s-gray','Concept'],
+    open:    ['s-a','Openstaand'],
+    betaald: ['s-g','Betaald'],
+    verlopen:['s-r','Verlopen'],
+    incasso: ['s-b','Incasso'],
+  };
+  const [cls,lbl] = cfg[s]||['s-gray',s];
+  return `<span class="spill ${cls}"><span class="d"></span>${lbl}</span>`;
+}
+
+// ── COUNTS ──
+function updateCounts(){
+  const tabs = ['alle','concept','open','betaald','verlopen','incasso'];
+  tabs.forEach(t=>{
+    const count = t==='alle' ? facturen.length : facturen.filter(f=>f.status===t).length;
+    const el = document.getElementById('cnt-'+t);
+    if(el) el.textContent = count;
+  });
+  // sidebar badge for open/verlopen
+  const urgent = facturen.filter(f=>f.status==='open'||f.status==='verlopen').length;
+  const badge = document.getElementById('sidebarBadge');
+  badge.style.display = urgent > 0 ? '' : 'none';
+  badge.textContent = urgent;
+}
+
+// ── FILTER & SEARCH ──
+function getVisible(){
+  let list = facturen;
+  if(activeTab !== 'alle') list = list.filter(f=>f.status===activeTab);
+  if(searchQuery){
+    const q = searchQuery.toLowerCase();
+    list = list.filter(f=>
+      f.klant.toLowerCase().includes(q) ||
+      f.nummer.toLowerCase().includes(q) ||
+      f.omschrijving.toLowerCase().includes(q)
+    );
+  }
+  return list;
+}
+
+// ── RENDER ──
+function render(){
+  updateCounts();
+  const visible = getVisible();
+  const wrap = document.getElementById('tableWrap');
+
+  if(facturen.length === 0){
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        </div>
+        <div class="es-title">Nog geen offertes</div>
+        <div class="es-sub">Maak uw eerste factuur aan om te beginnen. Facturen worden hier overzichtelijk weergegeven met status, bedrag en betalingshistorie.</div>
+        <button class="btn-primary" onclick="window.location.href='factuur-aanmaken.html'">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Eerste factuur aanmaken
+        </button>
+      </div>`;
+    return;
+  }
+
+  if(visible.length === 0){
+    wrap.innerHTML = `
+      <div class="empty-state">
+        <div class="es-icon">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+        <div class="es-title">Geen resultaten</div>
+        <div class="es-sub">Er zijn geen facturen gevonden die overeenkomen met uw zoekopdracht of filter.</div>
+      </div>`;
+    return;
+  }
+
+  wrap.innerHTML = `
+    <table class="fact-table">
+      <thead>
+        <tr>
+          <th><div class="cb-wrap"><input type="checkbox" id="selectAll" onchange="toggleSelectAll(this.checked)"></div></th>
+          <th>Datum</th>
+          <th>Klant</th>
+          <th>Omschrijving</th>
+          <th>Status</th>
+          <th class="r">Bedrag (excl.)</th>
+          <th class="r">Bedrag (incl.)</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="factuurBody">
+        ${visible.map(f => renderRow(f)).join('')}
+      </tbody>
+    </table>`;
+}
+
+function renderRow(f){
+  const sel = selectedIds.has(f.id);
+  const btwBedrag = f.bedragExcl * (1 + f.btwPct / 100);
+  return `
+    <tr class="${sel?'selected':''}" onclick="rowClick(event,${f.id})">
+      <td><div class="cb-wrap"><input type="checkbox" ${sel?'checked':''} onchange="toggleSelect(event,${f.id},this.checked)"></div></td>
+      <td>
+        <div class="f-date">${fmtDate(f.datum)}</div>
+        <span class="f-num">${f.nummer}</span>
+      </td>
+      <td>
+        <div class="f-client">${f.klant}</div>
+        <div class="f-client-type">${f.klantType||''}</div>
+      </td>
+      <td>
+        <div class="f-desc">${f.omschrijving}</div>
+        <div class="f-company" style="color:var(--muted2)">${f.bedrijfsprofiel||''}</div>
+      </td>
+      <td>${statusPill(f.status)}</td>
+      <td class="r"><div class="f-amount">${fmt(f.bedragExcl)}</div></td>
+      <td class="r">
+        <div class="f-amount">${fmt(btwBedrag)}</div>
+        <div class="f-amount-btw">incl. ${f.btwPct}% btw</div>
+      </td>
+      <td>
+        <div class="row-actions">
+          <div class="ra-btn" onclick="openFactuur(event,${f.id})">Openen</div>
+          <div class="ra-btn" onclick="downloadPDF(event,${f.id})">PDF</div>
+          <div class="ra-btn danger" onclick="verwijderFactuur(event,${f.id})">✕</div>
+        </div>
+      </td>
+    </tr>`;
+}
+
+// ── INTERACTIONS ──
+function switchTab(tab){
+  activeTab = tab;
+  document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  selectedIds.clear();
+  updateBulkBar();
+  render();
+}
+
+function searchFacturen(q){
+  searchQuery = q;
+  render();
+}
+
+function setFilter(type, el){
+  document.querySelectorAll('.tb-btn').forEach(b=>b.classList.remove('active-filter'));
+  el.classList.add('active-filter');
+}
+
+function toggleSelect(e, id, checked){
+  e.stopPropagation();
+  if(checked) selectedIds.add(id);
+  else selectedIds.delete(id);
+  updateBulkBar();
+  render();
+}
+
+function toggleSelectAll(checked){
+  const visible = getVisible();
+  visible.forEach(f=> checked ? selectedIds.add(f.id) : selectedIds.delete(f.id));
+  updateBulkBar();
+  render();
+}
+
+function rowClick(e, id){
+  if(e.target.type==='checkbox') return;
+  openFactuur(e, id);
+}
+
+function openFactuur(e, id){
+  e.stopPropagation();
+  showToast('Factuur openen...');
+  setTimeout(()=>{ window.location.href='factuur-aanmaken.html'; },400);
+}
+
+function downloadPDF(e, id){
+  e.stopPropagation();
+  showToast('PDF wordt gegenereerd...');
+}
+
+function verwijderFactuur(e, id){
+  e.stopPropagation();
+  facturen = facturen.filter(f=>f.id!==id);
+  selectedIds.delete(id);
+  updateBulkBar();
+  render();
+  showToast('Factuur verwijderd');
+}
+
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const count = selectedIds.size;
+  document.getElementById('bulkCount').textContent = count;
+  bar.classList.toggle('show', count > 0);
+}
+
+function bulkAction(type){
+  const msgs = {
+    herinnering: `Herinnering verstuurd naar ${selectedIds.size} klant(en)`,
+    export: `${selectedIds.size} factuur/facturen geëxporteerd`,
+    verwijder: `${selectedIds.size} factuur/facturen verwijderd`,
+  };
+  if(type==='verwijder'){
+    selectedIds.forEach(id=>{ facturen = facturen.filter(f=>f.id!==id); });
+    selectedIds.clear();
+    updateBulkBar();
+    render();
+  }
+  showToast(msgs[type]||'Actie uitgevoerd');
+}
+
+function exportFacturen(){
+  if(!facturen.length){ showToast('Geen facturen om te exporteren'); return; }
+  showToast('Exportbestand wordt aangemaakt...');
+}
+
+// ── TOAST ──
+function showToast(msg, color){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.style.borderColor = color||'var(--green)';
+  t.querySelector('.toast-dot').style.background = color||'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── INIT ──
+render();
+</script>
+</body>
+</html>

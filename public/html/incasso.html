@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Automatische incasso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#070b18;--navy2:#0d1224;--navy3:#111827;
+  --blue:#2456ff;--blue2:#4f7aff;--blue-g:rgba(36,86,255,.12);
+  --white:#f0f4ff;--muted:rgba(240,244,255,.45);--muted2:rgba(240,244,255,.22);
+  --border:rgba(240,244,255,.07);--border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+.app-body{display:flex;flex:1;overflow:hidden;}
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+
+.main{flex:1;overflow-y:auto;padding:28px 32px;}
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;}
+.page-sub{font-size:13.5px;color:var(--muted);margin-top:4px;max-width:480px;line-height:1.5;}
+
+.btn-primary{display:flex;align-items:center;gap:7px;background:var(--blue);color:#fff;border:none;border-radius:9px;padding:10px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.86}
+.btn-secondary{display:flex;align-items:center;gap:6px;background:var(--surface);color:var(--white);border:0.5px solid var(--border2);border-radius:8px;padding:9px 16px;font-size:13px;cursor:pointer;transition:background .15s;}
+.btn-secondary:hover{background:var(--surface2);}
+
+/* MOLLIE STATUS CARD */
+.mollie-card{
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:13px;padding:22px 24px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:20px;gap:20px;
+}
+.mollie-left{display:flex;align-items:center;gap:16px;}
+.mollie-logo{
+  width:44px;height:44px;border-radius:10px;
+  background:rgba(255,117,0,.12);border:0.5px solid rgba(255,117,0,.25);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:12px;font-weight:800;color:#ff7500;
+}
+.mollie-info{}
+.mollie-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;margin-bottom:4px;}
+.mollie-desc{font-size:13px;color:var(--muted);line-height:1.5;}
+.status-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;
+}
+.sb-inactive{background:rgba(255,255,255,.07);color:var(--muted);}
+.sb-active{background:rgba(16,185,129,.12);color:#10b981;}
+.sb-dot{width:6px;height:6px;border-radius:50%;}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.kpi-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;padding:16px 18px;position:relative;overflow:hidden;}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-card.b::before{background:var(--blue);}
+.kpi-card.g::before{background:var(--green);}
+.kpi-card.a::before{background:var(--amber);}
+.kpi-card.r::before{background:var(--red);}
+.kpi-label{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:7px;}
+.kpi-value{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:4px;}
+.kpi-sub{font-size:11.5px;color:var(--muted);}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 380px;gap:16px;}
+
+/* MACHTIGINGEN TABLE */
+.section-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:13px;overflow:hidden;}
+.sc-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:0.5px solid var(--border);}
+.sc-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;}
+.sc-sub{font-size:12px;color:var(--muted);margin-top:2px;}
+
+.mach-table{width:100%;border-collapse:collapse;}
+.mach-table th{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);padding:10px 18px;border-bottom:0.5px solid var(--border);text-align:left;font-weight:500;background:var(--navy2);}
+.mach-table th.r{text-align:right;}
+.mach-table td{padding:13px 18px;border-bottom:0.5px solid var(--border);font-size:13.5px;color:var(--white);vertical-align:middle;}
+.mach-table tr:last-child td{border:none;}
+.mach-table tr:hover td{background:var(--surface2);}
+.mach-table td.r{text-align:right;}
+.klant-cell{display:flex;align-items:center;gap:10px;}
+.kc-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;flex-shrink:0;}
+.kc-name{font-size:13.5px;font-weight:500;}
+.kc-email{font-size:11.5px;color:var(--muted);}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.spill .d{width:4px;height:4px;border-radius:50%;}
+.s-g{background:rgba(16,185,129,.12);color:#10b981;}.s-g .d{background:#10b981;}
+.s-a{background:rgba(245,158,11,.12);color:#f59e0b;}.s-a .d{background:#f59e0b;}
+.s-r{background:rgba(239,68,68,.12);color:#ef4444;}.s-r .d{background:#ef4444;}
+.s-b{background:rgba(36,86,255,.12);color:#4f7aff;}.s-b .d{background:#4f7aff;}
+
+.row-act{display:flex;gap:6px;justify-content:flex-end;opacity:0;transition:opacity .15s;}
+.mach-table tr:hover .row-act{opacity:1;}
+.ra-btn{background:var(--surface2);border:0.5px solid var(--border2);color:var(--muted);border-radius:6px;padding:4px 10px;font-size:11.5px;cursor:pointer;transition:all .15s;}
+.ra-btn:hover{color:var(--white);}
+.ra-btn.danger:hover{color:var(--red);border-color:rgba(239,68,68,.3);}
+
+/* RIGHT PANEL */
+.right-panel{display:flex;flex-direction:column;gap:14px;}
+
+/* NEXT RUN CARD */
+.next-run-card{
+  background:var(--blue-g);border:0.5px solid rgba(36,86,255,.3);
+  border-radius:13px;padding:20px;
+}
+.nr-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--blue2);margin-bottom:8px;font-weight:700;}
+.nr-date{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:#fff;margin-bottom:4px;}
+.nr-sub{font-size:12.5px;color:var(--muted);}
+.nr-divider{height:0.5px;background:rgba(36,86,255,.2);margin:14px 0;}
+.nr-row{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;}
+.nr-row .l{color:var(--muted);}
+.nr-row .v{font-weight:500;color:#fff;}
+
+/* TRANSACTIE HISTORY */
+.trans-list{}
+.trans-item{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:0.5px solid var(--border);transition:background .12s;cursor:pointer;}
+.trans-item:last-child{border:none;}
+.trans-item:hover{background:var(--surface2);}
+.ti-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.ti-icon.ok{background:rgba(16,185,129,.12);}
+.ti-icon.fail{background:rgba(239,68,68,.12);}
+.ti-icon svg{width:14px;height:14px;fill:none;stroke-width:2.5;}
+.ti-icon.ok svg{stroke:#10b981;}
+.ti-icon.fail svg{stroke:#ef4444;}
+.ti-info{flex:1;}
+.ti-name{font-size:13px;font-weight:500;color:#fff;}
+.ti-date{font-size:11.5px;color:var(--muted);}
+.ti-amount{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;}
+.ti-amount.ok{color:#10b981;}
+.ti-amount.fail{color:#ef4444;}
+
+/* EMPTY */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;text-align:center;}
+.es-icon{width:52px;height:52px;border-radius:14px;background:var(--surface);border:0.5px solid var(--border2);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.es-icon svg{width:22px;height:22px;stroke:var(--muted);fill:none;stroke-width:1.5;}
+.es-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:600;color:#fff;margin-bottom:6px;}
+.es-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto 20px;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(7,11,24,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s;}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{background:var(--navy2);border:0.5px solid var(--border2);border-radius:16px;width:100%;max-width:500px;overflow:hidden;transform:translateY(12px);transition:transform .22s;}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;padding:18px 24px;border-bottom:0.5px solid var(--border2);}
+.modal-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;color:#fff;}
+.modal-close{width:28px;height:28px;border-radius:7px;background:var(--surface);border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;font-size:15px;}
+.modal-close:hover{background:var(--surface2);color:#fff;}
+.modal-body{padding:22px 24px;display:flex;flex-direction:column;gap:14px;}
+.mfield{display:flex;flex-direction:column;gap:5px;}
+.mfield label{font-size:12px;font-weight:500;color:var(--muted);}
+.mfield label .req{color:var(--red);margin-left:1px;}
+.mfield input,.mfield select{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;width:100%;}
+.mfield input:focus,.mfield select:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
+.mfield input::placeholder{color:var(--muted2);}
+.mfield select option{background:var(--navy3);}
+.mrow2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.modal-foot{display:flex;justify-content:flex-end;gap:10px;padding:16px 24px;border-top:0.5px solid var(--border2);}
+.info-box{background:var(--blue-g);border:0.5px solid rgba(36,86,255,.25);border-radius:8px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.6;}
+
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:0.5px solid var(--green);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--white);box-shadow:0 4px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo-area">
+    <div><div class="logo-cds">CDS<span class="dot">·</span></div><div class="logo-sub">Facturen</div></div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill"><div class="cp-dot"></div><span>Mijn bedrijf</span><span class="chev">▾</span></div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="app.html"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>Dashboard</a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item" href="facturen.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Facturen</a>
+    <a class="nav-item" href="offertes.html"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>Offertes</a>
+    <a class="nav-item active" href="incasso.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>Automatische incasso</a>
+    <a class="nav-item" href="terugkerend.html"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Terugkerend</a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="klanten.html"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Klanten</a>
+    <a class="nav-item" href="financieel.html"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>Financieel</a>
+    <a class="nav-item" href="bedrijfsprofiel.html"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>Bedrijfsprofielen</a>
+    <a class="nav-item" href="instellingen.html"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>Instellingen</a>
+  </nav>
+
+  <div class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Automatische incasso</div>
+        <div class="page-sub">Klanten ondertekenen eenmalig een digitale SEPA-machtiging. Vervolgens incasseert u automatisch via Mollie op het door u ingestelde moment.</div>
+      </div>
+      <button class="btn-primary" onclick="openMachModal()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Machtiging aanvragen
+      </button>
+    </div>
+
+    <!-- MOLLIE KOPPELING -->
+    <div class="mollie-card">
+      <div class="mollie-left">
+        <div class="mollie-logo">M</div>
+        <div class="mollie-info">
+          <div class="mollie-title">Mollie SEPA Direct Debit</div>
+          <div class="mollie-desc">Koppel uw Mollie-account om automatische incasso te activeren. Transactiekosten: €0,49 per incasso.</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <span class="status-badge sb-inactive" id="mollieBadge"><span class="sb-dot" style="background:var(--muted)"></span>Niet gekoppeld</span>
+        <button class="btn-primary" onclick="koppelMollie()" id="mollieBtn">Mollie koppelen</button>
+      </div>
+    </div>
+
+    <!-- KPI STRIP -->
+    <div class="kpi-strip">
+      <div class="kpi-card b"><div class="kpi-label">Actieve machtigingen</div><div class="kpi-value" id="kpiMach">0</div><div class="kpi-sub">SEPA-machtigingen</div></div>
+      <div class="kpi-card g"><div class="kpi-label">Geïncasseerd (maand)</div><div class="kpi-value" id="kpiMaand">€ 0</div><div class="kpi-sub">Deze maand</div></div>
+      <div class="kpi-card a"><div class="kpi-label">Openstaand</div><div class="kpi-value" id="kpiOpen">€ 0</div><div class="kpi-sub">Nog te incasseren</div></div>
+      <div class="kpi-card r"><div class="kpi-label">Storneringen</div><div class="kpi-value" id="kpiStor">0</div><div class="kpi-sub">Deze maand</div></div>
+    </div>
+
+    <!-- SPLIT: MACHTIGINGEN + RECHTS PANEL -->
+    <div class="split">
+
+      <!-- MACHTIGINGEN TABEL -->
+      <div class="section-card">
+        <div class="sc-head">
+          <div>
+            <div class="sc-title">SEPA-machtigingen</div>
+            <div class="sc-sub" id="machSub">Geen actieve machtigingen</div>
+          </div>
+        </div>
+        <div id="machTable">
+          <div class="empty-state">
+            <div class="es-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div class="es-title">Geen machtigingen</div>
+            <div class="es-sub">Vraag een machtiging aan bij een klant om automatisch te kunnen incasseren. De klant ontvangt een e-mail met een verificatiebetaling van €0,05.</div>
+            <button class="btn-primary" onclick="openMachModal()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Eerste machtiging aanvragen
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RECHTS PANEL -->
+      <div class="right-panel">
+
+        <!-- VOLGENDE INCASSO -->
+        <div class="next-run-card">
+          <div class="nr-label">Volgende incassodatum</div>
+          <div class="nr-date" id="nextRunDate">Niet gepland</div>
+          <div class="nr-sub" id="nextRunSub">Activeer Mollie en voeg machtigingen toe</div>
+          <div class="nr-divider"></div>
+          <div class="nr-row"><span class="l">Aantal te incasseren</span><span class="v" id="nextRunCount">0 klanten</span></div>
+          <div class="nr-row"><span class="l">Verwacht bedrag</span><span class="v" id="nextRunAmount">€ 0,00</span></div>
+          <div class="nr-row"><span class="l">Transactiekosten</span><span class="v" id="nextRunCosts">€ 0,00</span></div>
+        </div>
+
+        <!-- TRANSACTIEHISTORIE -->
+        <div class="section-card">
+          <div class="sc-head">
+            <div class="sc-title">Transactiehistorie</div>
+          </div>
+          <div id="transHistory">
+            <div class="empty-state" style="padding:28px 16px;">
+              <div class="es-icon"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="es-title" style="font-size:13px">Geen transacties</div>
+              <div class="es-sub" style="font-size:12px">Incasso-transacties verschijnen hier na de eerste incassodatum.</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MACHTIGING MODAL -->
+<div class="modal-overlay" id="machModal" onclick="handleOverlay(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Machtiging aanvragen</div>
+      <button class="modal-close" onclick="closeMachModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="info-box">
+        De klant ontvangt een e-mail met een machtigingsverzoek. Na een verificatiebetaling van €0,05 wordt de SEPA-machtiging automatisch geregistreerd.
+      </div>
+      <div class="mfield">
+        <label>Klant <span class="req">*</span></label>
+        <select id="machKlant">
+          <option value="">Selecteer een klant...</option>
+        </select>
+      </div>
+      <div class="mrow2">
+        <div class="mfield">
+          <label>Incassodatum <span class="req">*</span></label>
+          <select id="machDatum">
+            <option value="1">1e van de maand</option>
+            <option value="15">15e van de maand</option>
+            <option value="last">Laatste dag</option>
+            <option value="custom">Aangepaste datum</option>
+          </select>
+        </div>
+        <div class="mfield">
+          <label>Standaard bedrag</label>
+          <input type="number" id="machBedrag" placeholder="0,00" min="0" step="0.01">
+        </div>
+      </div>
+      <div class="mfield">
+        <label>Omschrijving op afschrift</label>
+        <input type="text" id="machOmschr" placeholder="Bijv. Maandelijkse diensten">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn-secondary" onclick="closeMachModal()">Annuleren</button>
+      <button class="btn-primary" onclick="saveMachtiging()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Verzoek versturen
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><div class="toast-dot"></div><span id="toastMsg"></span></div>
+
+<script>
+let machtigingen = [];
+let mollieGekoppeld = false;
+
+function fmt(n){ return '€\u00a0'+n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function koppelMollie(){
+  showToast('Doorverwijzen naar Mollie...');
+  setTimeout(()=>{
+    mollieGekoppeld = true;
+    document.getElementById('mollieBadge').className='status-badge sb-active';
+    document.getElementById('mollieBadge').innerHTML='<span class="sb-dot" style="background:#10b981"></span>Gekoppeld';
+    document.getElementById('mollieBtn').textContent='Beheren';
+    document.getElementById('mollieBtn').onclick = ()=>showToast('Mollie dashboard openen...');
+    showToast('Mollie succesvol gekoppeld');
+  },1200);
+}
+
+function renderMachTable(){
+  const el = document.getElementById('machTable');
+  document.getElementById('kpiMach').textContent = machtigingen.filter(m=>m.status==='actief').length;
+  if(!machtigingen.length){
+    el.innerHTML=`<div class="empty-state">
+      <div class="es-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+      <div class="es-title">Geen machtigingen</div>
+      <div class="es-sub">Vraag een machtiging aan bij een klant om automatisch te kunnen incasseren.</div>
+      <button class="btn-primary" onclick="openMachModal()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Eerste machtiging aanvragen
+      </button></div>`;
+    document.getElementById('machSub').textContent='Geen actieve machtigingen';
+    return;
+  }
+  document.getElementById('machSub').textContent = machtigingen.length+' machtiging(en)';
+  el.innerHTML=`<table class="mach-table">
+    <thead><tr>
+      <th>Klant</th><th>Incassodatum</th><th>Bedrag</th><th>Status</th><th></th>
+    </tr></thead>
+    <tbody>${machtigingen.map(m=>`
+    <tr>
+      <td><div class="klant-cell">
+        <div class="kc-av" style="background:${m.color}22;color:${m.color}">${m.init}</div>
+        <div><div class="kc-name">${m.klant}</div><div class="kc-email">${m.email}</div></div>
+      </div></td>
+      <td style="font-size:13px">${m.datum}</td>
+      <td style="font-family:'Syne',sans-serif;font-weight:600">${fmt(m.bedrag||0)}</td>
+      <td><span class="spill ${m.status==='actief'?'s-g':m.status==='wachten'?'s-a':'s-r'}">
+        <span class="d"></span>${m.status==='actief'?'Actief':m.status==='wachten'?'In afwachting':'Geannuleerd'}
+      </span></td>
+      <td><div class="row-act">
+        <div class="ra-btn" onclick="showToast('Incasso handmatig uitvoeren...')">Nu incasseren</div>
+        <div class="ra-btn danger" onclick="verwijderMach(${m.id})">Annuleren</div>
+      </div></td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function verwijderMach(id){
+  machtigingen = machtigingen.filter(m=>m.id!==id);
+  renderMachTable();
+  showToast('Machtiging geannuleerd');
+}
+
+function openMachModal(){
+  document.getElementById('machKlant').innerHTML='<option value="">Selecteer een klant...</option>';
+  document.getElementById('machBedrag').value='';
+  document.getElementById('machOmschr').value='';
+  document.getElementById('machModal').classList.add('open');
+}
+function closeMachModal(){ document.getElementById('machModal').classList.remove('open'); }
+function handleOverlay(e){ if(e.target===document.getElementById('machModal')) closeMachModal(); }
+
+function saveMachtiging(){
+  const klant = document.getElementById('machKlant').value;
+  const bedrag = parseFloat(document.getElementById('machBedrag').value)||0;
+  if(!klant){ showToast('Selecteer een klant','var(--red)'); return; }
+  const datumMap = {'1':'1e van de maand','15':'15e van de maand','last':'Laatste dag van de maand','custom':'Aangepaste datum'};
+  machtigingen.push({
+    id:Date.now(),
+    klant: klant||'Klant',
+    email:'klant@bedrijf.nl',
+    init: klant.substring(0,2).toUpperCase(),
+    color:'#2456ff',
+    datum: datumMap[document.getElementById('machDatum').value]||'1e van de maand',
+    bedrag,
+    status:'wachten',
+  });
+  closeMachModal();
+  renderMachTable();
+  showToast('Machtigingsverzoek verstuurd naar klant');
+}
+
+function showToast(msg,color){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  t.style.borderColor=color||'var(--green)';
+  t.querySelector('.toast-dot').style.background=color||'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+renderMachTable();
+</script>
+</body>
+</html>

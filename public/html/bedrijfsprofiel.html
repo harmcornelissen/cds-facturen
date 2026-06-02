@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Bedrijfsprofiel</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy:   #070b18;
+  --navy2:  #0d1224;
+  --navy3:  #111827;
+  --blue:   #2456ff;
+  --blue2:  #4f7aff;
+  --blue-g: rgba(36,86,255,.12);
+  --white:  #f0f4ff;
+  --muted:  rgba(240,244,255,.45);
+  --muted2: rgba(240,244,255,.25);
+  --border: rgba(240,244,255,.07);
+  --border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);
+  --surface2:rgba(255,255,255,.07);
+  --green:  #10b981;
+  --red:    #ef4444;
+  --amber:  #f59e0b;
+  --sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{
+  height:52px;background:var(--navy2);
+  border-bottom:0.5px solid var(--border2);
+  display:flex;align-items:center;padding:0 20px;gap:16px;
+  flex-shrink:0;z-index:10;
+}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:8px;padding:5px 12px;cursor:pointer;transition:background .15s;
+}
+.company-pill:hover{background:var(--surface2)}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{
+  font-family:'Syne',sans-serif;font-size:10px;font-weight:700;
+  letter-spacing:1px;text-transform:uppercase;
+  background:linear-gradient(135deg,var(--blue),#7c3aed);
+  color:#fff;padding:3px 10px;border-radius:20px;
+}
+.avatar{
+  width:30px;height:30px;border-radius:50%;
+  background:var(--blue-g);border:1.5px solid var(--blue);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);
+}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{
+  width:var(--sidebar);background:var(--navy2);
+  border-right:0.5px solid var(--border2);
+  display:flex;flex-direction:column;padding:16px 0;
+  flex-shrink:0;overflow-y:auto;
+}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 18px;cursor:pointer;
+  border-left:2px solid transparent;
+  font-size:13.5px;color:var(--muted);text-decoration:none;
+  transition:all .15s;
+}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+.sidebar-foot{margin-top:auto;padding:12px;border-top:0.5px solid var(--border);}
+.add-company-btn{
+  width:100%;display:flex;align-items:center;justify-content:center;gap:8px;
+  background:var(--blue-g);border:0.5px solid rgba(36,86,255,.3);
+  border-radius:8px;padding:9px;font-size:13px;color:var(--blue2);
+  cursor:pointer;transition:background .15s;font-family:'DM Sans',sans-serif;
+}
+.add-company-btn:hover{background:rgba(36,86,255,.18);}
+
+/* MAIN */
+.main{flex:1;overflow-y:auto;padding:32px 40px;background:var(--navy);}
+
+/* PAGE HEADER */
+.page-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:32px;}
+.page-title{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;}
+.page-sub{font-size:13.5px;color:var(--muted);margin-top:4px;}
+.header-actions{display:flex;gap:8px;}
+.btn-primary{
+  display:flex;align-items:center;gap:6px;
+  background:var(--blue);color:#fff;border:none;border-radius:8px;
+  padding:9px 20px;font-family:'Syne',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:opacity .15s;
+}
+.btn-primary:hover{opacity:.85}
+.btn-secondary{
+  display:flex;align-items:center;gap:6px;
+  background:var(--surface);color:var(--white);
+  border:0.5px solid var(--border2);border-radius:8px;
+  padding:9px 16px;font-size:13px;cursor:pointer;transition:background .15s;
+}
+.btn-secondary:hover{background:var(--surface2);}
+
+/* COMPANY TABS */
+.company-tabs{display:flex;gap:8px;margin-bottom:28px;flex-wrap:wrap;}
+.ctab{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:10px;padding:10px 16px;cursor:pointer;
+  transition:all .15s;position:relative;
+}
+.ctab:hover{background:var(--surface2);}
+.ctab.active{background:var(--blue-g);border-color:rgba(36,86,255,.35);}
+.ctab-dot{width:8px;height:8px;border-radius:2px;}
+.ctab-name{font-size:13.5px;font-weight:500;}
+.ctab-type{font-size:11px;color:var(--muted);}
+.ctab-add{
+  background:transparent;border:0.5px dashed var(--border2);
+  color:var(--muted);font-size:13px;
+}
+.ctab-add:hover{border-color:var(--blue2);color:var(--blue2);}
+
+/* FORM GRID */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.form-section{
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:14px;overflow:hidden;
+}
+.form-section.full{grid-column:span 2;}
+.fs-head{
+  display:flex;align-items:center;gap:10px;
+  padding:16px 22px;border-bottom:0.5px solid var(--border);
+}
+.fs-icon{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--blue-g);border:0.5px solid rgba(36,86,255,.2);
+  display:flex;align-items:center;justify-content:center;
+}
+.fs-icon svg{width:15px;height:15px;stroke:var(--blue2);fill:none;stroke-width:1.8;}
+.fs-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;}
+.fs-body{padding:20px 22px;display:flex;flex-direction:column;gap:16px;}
+
+/* FORM FIELDS */
+.field{display:flex;flex-direction:column;gap:6px;}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.3px;}
+.field label span{color:var(--red);margin-left:2px;}
+.field input,.field select,.field textarea{
+  background:rgba(255,255,255,.05);
+  border:0.5px solid var(--border2);
+  border-radius:8px;padding:9px 12px;
+  font-size:13.5px;color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  transition:border-color .15s,background .15s;
+  outline:none;
+  width:100%;
+}
+.field input:focus,.field select:focus,.field textarea:focus{
+  border-color:rgba(36,86,255,.5);
+  background:rgba(36,86,255,.06);
+}
+.field input::placeholder,.field textarea::placeholder{color:var(--muted2);}
+.field select option{background:var(--navy3);color:var(--white);}
+.field textarea{resize:vertical;min-height:80px;line-height:1.5;}
+.field-hint{font-size:11.5px;color:var(--muted2);line-height:1.5;}
+
+/* LOGO UPLOAD */
+.logo-upload-area{
+  border:0.5px dashed var(--border2);
+  border-radius:10px;padding:24px;
+  display:flex;align-items:center;gap:20px;
+  cursor:pointer;transition:all .2s;
+  background:rgba(255,255,255,.02);
+}
+.logo-upload-area:hover{border-color:rgba(36,86,255,.4);background:var(--blue-g);}
+.logo-preview{
+  width:72px;height:72px;border-radius:10px;
+  background:var(--surface2);border:0.5px solid var(--border2);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;overflow:hidden;
+}
+.logo-preview-inner{
+  font-family:'Syne',sans-serif;font-size:18px;font-weight:800;
+  color:var(--blue2);
+}
+.logo-upload-text{}
+.logo-upload-title{font-size:14px;font-weight:500;color:#fff;margin-bottom:4px;}
+.logo-upload-hint{font-size:12px;color:var(--muted);line-height:1.5;}
+.upload-btn{
+  margin-top:10px;display:inline-flex;align-items:center;gap:6px;
+  background:var(--surface2);border:0.5px solid var(--border2);
+  border-radius:6px;padding:6px 14px;font-size:12px;
+  color:var(--white);cursor:pointer;transition:background .15s;
+}
+.upload-btn:hover{background:rgba(255,255,255,.1);}
+
+/* COLOR PICKER */
+.color-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.color-swatch{
+  width:28px;height:28px;border-radius:6px;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;flex-shrink:0;
+}
+.color-swatch.sel{border-color:#fff;transform:scale(1.1);}
+.color-input-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  border-radius:8px;padding:5px 12px;
+}
+.color-dot{width:16px;height:16px;border-radius:4px;background:#2456ff;}
+.color-input-wrap input{
+  background:transparent;border:none;
+  font-size:13px;color:var(--white);
+  font-family:'DM Sans',sans-serif;
+  width:80px;outline:none;
+}
+
+/* IBAN / BTW INLINE STATUS */
+.field-status{
+  display:flex;align-items:center;gap:6px;
+  font-size:12px;margin-top:2px;
+}
+.status-ok{color:var(--green);}
+.status-warn{color:var(--amber);}
+
+/* SAVE BAR */
+.save-bar{
+  position:sticky;bottom:0;
+  background:rgba(7,11,24,.92);
+  backdrop-filter:blur(12px);
+  border-top:0.5px solid var(--border2);
+  padding:14px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+  margin:24px -40px -32px;
+}
+.save-bar-left{font-size:13px;color:var(--muted);}
+.save-bar-left strong{color:var(--amber);}
+.save-bar-actions{display:flex;gap:10px;}
+
+/* DANGER ZONE */
+.danger-zone{
+  background:rgba(239,68,68,.05);
+  border:0.5px solid rgba(239,68,68,.2);
+  border-radius:14px;padding:20px 22px;
+  grid-column:span 2;
+  display:flex;align-items:center;justify-content:space-between;gap:20px;
+}
+.dz-text{}
+.dz-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:var(--red);margin-bottom:4px;}
+.dz-desc{font-size:13px;color:var(--muted);}
+.btn-danger{
+  background:rgba(239,68,68,.12);
+  border:0.5px solid rgba(239,68,68,.3);
+  color:var(--red);border-radius:8px;
+  padding:9px 18px;font-size:13px;cursor:pointer;
+  white-space:nowrap;transition:background .15s;
+}
+.btn-danger:hover{background:rgba(239,68,68,.2);}
+
+/* TOAST */
+.toast{
+  position:fixed;bottom:24px;right:24px;
+  background:var(--navy3);border:0.5px solid var(--green);
+  border-radius:10px;padding:12px 18px;
+  display:flex;align-items:center;gap:10px;
+  font-size:13.5px;color:var(--white);
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+  opacity:0;transform:translateY(8px);
+  transition:all .25s;pointer-events:none;
+}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill">
+      <div class="cp-dot"></div>
+      <span>Mijn bedrijf</span>
+      <span class="chev">▾</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="app.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item active" href="#">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="#">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+    <div class="sidebar-foot">
+      <button class="add-company-btn" onclick="showToast('Nieuw bedrijfsprofiel aanmaken...')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Bedrijf toevoegen
+      </button>
+    </div>
+  </nav>
+
+  <!-- MAIN -->
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Bedrijfsprofielen</div>
+        <div class="page-sub">Beheer de bedrijfsidentiteiten waarmee u facturen verstuurt.</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn-secondary" onclick="showToast('Voorbeeld factuur geopend')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          Voorbeeld factuur
+        </button>
+        <button class="btn-primary" onclick="saveProfile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Wijzigingen opslaan
+        </button>
+      </div>
+    </div>
+
+    <!-- COMPANY TABS -->
+    <div class="company-tabs">
+      <div class="ctab active" onclick="switchTab(this, '#2456ff')">
+        <div class="ctab-dot" style="background:#2456ff"></div>
+        <div>
+          <div class="ctab-name">Mijn bedrijf</div>
+          <div class="ctab-type">Eenmanszaak</div>
+        </div>
+      </div>
+      <div class="ctab" onclick="switchTab(this, '#10b981')">
+        <div class="ctab-dot" style="background:#10b981"></div>
+        <div>
+          <div class="ctab-name">Webshop B.V.</div>
+          <div class="ctab-type">Besloten Vennootschap</div>
+        </div>
+      </div>
+      <div class="ctab ctab-add" onclick="showToast('Nieuw bedrijfsprofiel aanmaken...')">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Profiel toevoegen
+      </div>
+    </div>
+
+    <!-- FORM GRID -->
+    <div class="form-grid">
+
+      <!-- BEDRIJFSGEGEVENS -->
+      <div class="form-section">
+        <div class="fs-head">
+          <div class="fs-icon"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg></div>
+          <div class="fs-title">Bedrijfsgegevens</div>
+        </div>
+        <div class="fs-body">
+          <div class="field">
+            <label>Bedrijfsnaam <span>*</span></label>
+            <input type="text" value="" placeholder="Naam van uw bedrijf">
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Rechtsvorm <span>*</span></label>
+              <select>
+                <option selected>Eenmanszaak</option>
+                <option>Besloten Vennootschap (B.V.)</option>
+                <option>Vennootschap Onder Firma (V.O.F.)</option>
+                <option>Naamloze Vennootschap (N.V.)</option>
+                <option>Stichting</option>
+                <option>Overig</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>KvK-nummer <span>*</span></label>
+              <input type="text" value="" placeholder="8 cijfers">
+              <div class="field-status status-ok">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Geverifieerd via KvK
+              </div>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>BTW-nummer</label>
+              <input type="text" value="" placeholder="NL000000000B00">
+              <div class="field-status status-ok">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Geldig BTW-nummer
+              </div>
+            </div>
+            <div class="field">
+              <label>IBAN <span>*</span></label>
+              <input type="text" value="" placeholder="NL00 BANK 0000 0000 00">
+              <div class="field-status status-ok">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                Geldig IBAN
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Tenaamstelling IBAN</label>
+            <input type="text" value="" placeholder="Naam rekeninghouder">
+          </div>
+        </div>
+      </div>
+
+      <!-- LOGO & HUISSTIJL -->
+      <div class="form-section">
+        <div class="fs-head">
+          <div class="fs-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></div>
+          <div class="fs-title">Logo &amp; huisstijl</div>
+        </div>
+        <div class="fs-body">
+          <div class="field">
+            <label>Bedrijfslogo</label>
+            <div class="logo-upload-area" onclick="showToast('Bestandskiezer geopend...')">
+              <div class="logo-preview">
+                <div class="logo-preview-inner">CDS</div>
+              </div>
+              <div class="logo-upload-text">
+                <div class="logo-upload-title">Logo uploaden</div>
+                <div class="logo-upload-hint">PNG of SVG aanbevolen. Maximaal 2 MB.<br>Minimaal 200 × 200 px voor optimale kwaliteit.</div>
+                <div class="upload-btn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0018 9h-1.26A8 8 0 103 16.3"/></svg>
+                  Bestand kiezen
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Primaire huisstijlkleur</label>
+            <div class="color-row">
+              <div class="color-swatch sel" style="background:#2456ff" onclick="selectColor(this,'#2456ff')"></div>
+              <div class="color-swatch" style="background:#10b981" onclick="selectColor(this,'#10b981')"></div>
+              <div class="color-swatch" style="background:#7c3aed" onclick="selectColor(this,'#7c3aed')"></div>
+              <div class="color-swatch" style="background:#f59e0b" onclick="selectColor(this,'#f59e0b')"></div>
+              <div class="color-swatch" style="background:#ef4444" onclick="selectColor(this,'#ef4444')"></div>
+              <div class="color-swatch" style="background:#0d1224;border:0.5px solid rgba(255,255,255,.2)" onclick="selectColor(this,'#0d1224')"></div>
+              <div class="color-input-wrap">
+                <div class="color-dot" id="colorDot"></div>
+                <input type="text" id="colorInput" value="#2456ff" placeholder="#000000">
+              </div>
+            </div>
+            <div class="field-hint">Deze kleur wordt gebruikt in de koptekst en accentelementen van uw factuursjabloon.</div>
+          </div>
+          <div class="field">
+            <label>Factuursjabloon</label>
+            <select>
+              <option selected>Modern (donkere koptekst)</option>
+              <option>Klassiek (lichte koptekst)</option>
+              <option>Minimaal (geen koptekst)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACTGEGEVENS -->
+      <div class="form-section">
+        <div class="fs-head">
+          <div class="fs-icon"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></div>
+          <div class="fs-title">Contactgegevens</div>
+        </div>
+        <div class="fs-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Straat &amp; huisnummer <span>*</span></label>
+              <input type="text" value="" placeholder="Straatnaam 0">
+            </div>
+            <div class="field">
+              <label>Postcode <span>*</span></label>
+              <input type="text" value="" placeholder="0000 AA">
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Plaats <span>*</span></label>
+              <input type="text" value="" placeholder="Plaatsnaam">
+            </div>
+            <div class="field">
+              <label>Land</label>
+              <select>
+                <option selected>Nederland</option>
+                <option>België</option>
+                <option>Duitsland</option>
+                <option>Overig</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>E-mailadres <span>*</span></label>
+              <input type="email" value="" placeholder="naam@bedrijf.nl">
+            </div>
+            <div class="field">
+              <label>Telefoonnummer</label>
+              <input type="tel" value="" placeholder="+31 6 00000000">
+            </div>
+          </div>
+          <div class="field">
+            <label>Website</label>
+            <input type="url" value="" placeholder="https://uwbedrijf.nl">
+          </div>
+        </div>
+      </div>
+
+      <!-- FACTUURINSTELLINGEN -->
+      <div class="form-section">
+        <div class="fs-head">
+          <div class="fs-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+          <div class="fs-title">Factuurinstellingen</div>
+        </div>
+        <div class="fs-body">
+          <div class="field-row">
+            <div class="field">
+              <label>Factuurnummer prefix</label>
+              <input type="text" value="F-" placeholder="F-">
+              <div class="field-hint">Voorbeeld: F-2026-001</div>
+            </div>
+            <div class="field">
+              <label>Standaard betalingstermijn</label>
+              <select>
+                <option>7 dagen</option>
+                <option selected>14 dagen</option>
+                <option>30 dagen</option>
+                <option>60 dagen</option>
+              </select>
+            </div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label>Standaard BTW-tarief</label>
+              <select>
+                <option>0%</option>
+                <option>9%</option>
+                <option selected>21%</option>
+                <option>Vrijgesteld</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Valuta</label>
+              <select>
+                <option selected>EUR — Euro (€)</option>
+                <option>USD — Dollar ($)</option>
+                <option>GBP — Pond (£)</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Standaard betalingsinstructie op factuur</label>
+            <textarea placeholder="Bijv. Gelieve het bedrag over te maken onder vermelding van het factuurnummer.">Gelieve het factuurbedrag binnen de betalingstermijn over te maken onder vermelding van het factuurnummer.</textarea>
+          </div>
+          <div class="field">
+            <label>Voetnoot factuur</label>
+            <input type="text" value="" placeholder="Optionele voetnoot onderaan de factuur">
+          </div>
+        </div>
+      </div>
+
+      <!-- DANGER ZONE -->
+      <div class="danger-zone">
+        <div class="dz-text">
+          <div class="dz-title">Bedrijfsprofiel verwijderen</div>
+          <div class="dz-desc">Dit verwijdert het profiel inclusief alle gekoppelde factuurinstellingen. Bestaande facturen blijven beschikbaar in het archief.</div>
+        </div>
+        <button class="btn-danger" onclick="showToast('Bevestig verwijderen via het popup-venster')">Profiel verwijderen</button>
+      </div>
+
+    </div>
+
+    <!-- SAVE BAR -->
+    <div class="save-bar">
+      <div class="save-bar-left"><strong>Let op:</strong> Wijzigingen zijn nog niet opgeslagen.</div>
+      <div class="save-bar-actions">
+        <button class="btn-secondary" onclick="showToast('Wijzigingen teruggedraaid')">Annuleren</button>
+        <button class="btn-primary" onclick="saveProfile()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Opslaan
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Profiel opgeslagen</span>
+</div>
+
+<script>
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+function saveProfile() {
+  showToast('Bedrijfsprofiel succesvol opgeslagen');
+  document.querySelector('.save-bar-left').innerHTML = '<span style="color:var(--green)">Alle wijzigingen zijn opgeslagen.</span>';
+}
+
+function switchTab(el, color) {
+  document.querySelectorAll('.ctab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const name = el.querySelector('.ctab-name')?.textContent;
+  if (name) showToast('Profiel geladen: ' + name);
+}
+
+function selectColor(el, hex) {
+  document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  document.getElementById('colorDot').style.background = hex;
+  document.getElementById('colorInput').value = hex;
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<base target="_top">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CDS Facturen | Klanten</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#070b18;--navy2:#0d1224;--navy3:#111827;
+  --blue:#2456ff;--blue2:#4f7aff;--blue-g:rgba(36,86,255,.12);
+  --white:#f0f4ff;--muted:rgba(240,244,255,.45);--muted2:rgba(240,244,255,.22);
+  --border:rgba(240,244,255,.07);--border2:rgba(240,244,255,.13);
+  --surface:rgba(255,255,255,.04);--surface2:rgba(255,255,255,.07);
+  --green:#10b981;--red:#ef4444;--amber:#f59e0b;--sidebar:220px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);display:flex;flex-direction:column;}
+
+/* TOPBAR */
+.topbar{height:52px;background:var(--navy2);border-bottom:0.5px solid var(--border2);display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0;}
+.logo-area{display:flex;align-items:center;gap:10px;width:var(--sidebar);flex-shrink:0;}
+.logo-cds{font-family:'Syne',sans-serif;font-weight:800;font-size:20px;color:#fff;letter-spacing:-.5px;}
+.logo-cds .dot{color:var(--blue)}
+.logo-sub{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:2px;color:var(--muted);text-transform:uppercase;}
+.logo-div{width:1px;height:20px;background:var(--border2);}
+.topbar-center{flex:1;display:flex;align-items:center;gap:8px;}
+.company-pill{display:flex;align-items:center;gap:8px;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:5px 12px;cursor:pointer;}
+.cp-dot{width:7px;height:7px;border-radius:2px;background:var(--blue);}
+.company-pill span{font-size:13px;}
+.company-pill .chev{font-size:10px;color:var(--muted);margin-left:4px;}
+.topbar-right{display:flex;align-items:center;gap:10px;}
+.plan-badge{font-family:'Syne',sans-serif;font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;padding:3px 10px;border-radius:20px;}
+.avatar{width:30px;height:30px;border-radius:50%;background:var(--blue-g);border:1.5px solid var(--blue);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--blue2);}
+
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;}
+
+/* SIDEBAR */
+.sidebar{width:var(--sidebar);background:var(--navy2);border-right:0.5px solid var(--border2);display:flex;flex-direction:column;padding:16px 0;flex-shrink:0;overflow-y:auto;}
+.nav-label{font-size:10px;font-weight:500;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);padding:14px 18px 6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 18px;cursor:pointer;border-left:2px solid transparent;font-size:13.5px;color:var(--muted);text-decoration:none;transition:all .15s;}
+.nav-item:hover{background:var(--surface);color:var(--white);}
+.nav-item.active{background:var(--blue-g);border-left-color:var(--blue);color:var(--white);}
+.nav-item svg{width:15px;height:15px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+.nav-badge{margin-left:auto;font-size:10px;background:var(--blue);color:#fff;border-radius:20px;padding:1px 7px;font-weight:600;}
+
+/* SPLIT */
+.split{display:flex;flex:1;overflow:hidden;}
+.list-pane{width:400px;flex-shrink:0;border-right:0.5px solid var(--border2);display:flex;flex-direction:column;overflow:hidden;}
+.detail-pane{flex:1;overflow-y:auto;padding:28px 32px;}
+
+/* LIST PANE HEADER */
+.lp-header{padding:20px 20px 14px;border-bottom:0.5px solid var(--border2);}
+.lp-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.lp-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
+.btn-primary{display:flex;align-items:center;gap:6px;background:var(--blue);color:#fff;border:none;border-radius:8px;padding:8px 14px;font-family:'Syne',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.btn-primary:hover{opacity:.85}
+.search-wrap{position:relative;}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;pointer-events:none;}
+.search-input{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:8px 12px 8px 32px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
+.search-input:focus{border-color:rgba(36,86,255,.45);}
+.search-input::placeholder{color:var(--muted2);}
+
+/* FILTER CHIPS */
+.filter-row{display:flex;gap:6px;padding:10px 20px;border-bottom:0.5px solid var(--border2);overflow-x:auto;}
+.filter-row::-webkit-scrollbar{display:none}
+.fchip{font-size:11.5px;padding:4px 12px;border-radius:20px;border:0.5px solid var(--border2);color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;background:transparent;}
+.fchip:hover{background:var(--surface2);color:var(--white);}
+.fchip.on{background:var(--blue-g);border-color:rgba(36,86,255,.35);color:var(--blue2);}
+
+/* KLANT LIST */
+.klant-list{flex:1;overflow-y:auto;}
+.klant-item{display:flex;align-items:center;gap:12px;padding:12px 20px;border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .12s;position:relative;}
+.klant-item:hover{background:var(--surface);}
+.klant-item.active{background:var(--blue-g);}
+.klant-item.active::after{content:'';position:absolute;right:0;top:0;bottom:0;width:2px;background:var(--blue);}
+.ki-av{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;flex-shrink:0;}
+.ki-info{flex:1;min-width:0;}
+.ki-naam{font-size:13.5px;font-weight:500;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ki-email{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ki-right{text-align:right;flex-shrink:0;}
+.ki-bedrag{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fff;}
+.ki-status{font-size:10px;margin-top:2px;}
+.ki-status.open{color:var(--amber);}
+.ki-status.ok{color:var(--green);}
+
+/* DETAIL PANE */
+.dp-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:28px;}
+.dp-identity{display:flex;align-items:center;gap:16px;}
+.dp-av{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:20px;font-weight:800;flex-shrink:0;}
+.dp-name{font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:4px;}
+.dp-type{font-size:13px;color:var(--muted);}
+.dp-actions{display:flex;gap:8px;}
+.btn-secondary{display:flex;align-items:center;gap:6px;background:var(--surface);color:var(--white);border:0.5px solid var(--border2);border-radius:8px;padding:8px 14px;font-size:13px;cursor:pointer;transition:background .15s;}
+.btn-secondary:hover{background:var(--surface2);}
+
+/* KPI STRIP */
+.kpi-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:24px;}
+.kpi-c{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:14px 16px;position:relative;overflow:hidden;}
+.kpi-c::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi-c.b::before{background:var(--blue);}
+.kpi-c.g::before{background:var(--green);}
+.kpi-c.a::before{background:var(--amber);}
+.kpi-c.r::before{background:var(--red);}
+.kpi-l{font-size:10px;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;margin-bottom:6px;}
+.kpi-v{font-family:'Syne',sans-serif;font-size:22px;font-weight:700;color:#fff;}
+.kpi-s{font-size:11px;margin-top:3px;color:var(--muted);}
+
+/* TABS */
+.dp-tabs{display:flex;gap:0;border-bottom:0.5px solid var(--border2);margin-bottom:22px;}
+.dp-tab{padding:10px 18px;font-size:13.5px;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;margin-bottom:-0.5px;}
+.dp-tab:hover{color:var(--white);}
+.dp-tab.active{color:#fff;border-bottom-color:var(--blue);}
+
+/* CONTACT CARD */
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px;}
+.contact-card{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:16px;}
+.cc-label{font-size:10px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.cc-row{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.cc-row:last-child{margin-bottom:0;}
+.cc-row svg{width:13px;height:13px;stroke:var(--muted);fill:none;stroke-width:2;flex-shrink:0;}
+.cc-val{font-size:13px;color:var(--white);}
+.cc-val a{color:var(--blue2);text-decoration:none;}
+
+/* FACTUUR HISTORY TABLE */
+.hist-table{background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;overflow:hidden;}
+.ht-head{display:grid;grid-template-columns:100px 1fr 90px 90px 90px;padding:10px 18px;border-bottom:0.5px solid var(--border);gap:0;}
+.ht-head span{font-size:10px;font-weight:500;letter-spacing:1px;text-transform:uppercase;color:var(--muted);}
+.ht-head .r{text-align:right;}
+.ht-row{display:grid;grid-template-columns:100px 1fr 90px 90px 90px;padding:12px 18px;border-bottom:0.5px solid var(--border);gap:0;align-items:center;cursor:pointer;transition:background .12s;}
+.ht-row:last-child{border:none;}
+.ht-row:hover{background:var(--surface2);}
+.ht-num{font-family:'Syne',sans-serif;font-size:11.5px;color:var(--muted);}
+.ht-desc{font-size:13px;color:var(--white);}
+.ht-date{font-size:12px;color:var(--muted);text-align:right;}
+.ht-amount{font-family:'Syne',sans-serif;font-size:13px;font-weight:600;color:#fff;text-align:right;}
+.ht-status{text-align:right;}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:600;padding:3px 9px;border-radius:20px;}
+.spill .d{width:4px;height:4px;border-radius:50%;}
+.s-g{background:rgba(16,185,129,.12);color:#10b981;}
+.s-g .d{background:#10b981;}
+.s-a{background:rgba(245,158,11,.12);color:#f59e0b;}
+.s-a .d{background:#f59e0b;}
+.s-r{background:rgba(239,68,68,.12);color:#ef4444;}
+.s-r .d{background:#ef4444;}
+.s-b{background:rgba(36,86,255,.12);color:#4f7aff;}
+.s-b .d{background:#4f7aff;}
+
+/* NOTITIES */
+.note-area{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:14px;}
+.note-area textarea{width:100%;background:transparent;border:none;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;resize:none;outline:none;line-height:1.6;}
+.note-area textarea::placeholder{color:var(--muted2);}
+
+/* EMPTY STATE */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px;}
+.empty-icon{width:56px;height:56px;background:var(--surface);border:0.5px solid var(--border2);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;}
+.empty-icon svg{width:24px;height:24px;stroke:var(--muted);fill:none;stroke-width:1.5;}
+.empty-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;color:#fff;margin-bottom:6px;}
+.empty-sub{font-size:13px;color:var(--muted);line-height:1.6;max-width:260px;}
+
+/* MODAL OVERLAY */
+.modal-overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(7,11,24,.75);
+  backdrop-filter:blur(6px);
+  display:flex;align-items:center;justify-content:center;
+  opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.modal-overlay.open{opacity:1;pointer-events:all;}
+.modal{
+  background:var(--navy2);
+  border:0.5px solid var(--border2);
+  border-radius:16px;
+  width:100%;max-width:560px;
+  max-height:90vh;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+  transform:translateY(12px);
+  transition:transform .22s;
+}
+.modal-overlay.open .modal{transform:translateY(0);}
+.modal-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:18px 24px;border-bottom:0.5px solid var(--border2);flex-shrink:0;
+}
+.modal-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:#fff;}
+.modal-close{
+  width:30px;height:30px;border-radius:8px;
+  background:var(--surface);border:0.5px solid var(--border2);
+  color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s;font-size:16px;
+}
+.modal-close:hover{background:var(--surface2);color:#fff;}
+.modal-body{overflow-y:auto;padding:22px 24px;display:flex;flex-direction:column;gap:16px;}
+.modal-body::-webkit-scrollbar{width:4px;}
+.modal-body::-webkit-scrollbar-track{background:transparent;}
+.modal-body::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.modal-section-label{
+  font-family:'Syne',sans-serif;font-size:11px;font-weight:700;
+  letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);
+  padding-bottom:10px;border-bottom:0.5px solid var(--border);
+  margin-bottom:2px;
+}
+.mfield{display:flex;flex-direction:column;gap:5px;}
+.mfield label{font-size:12px;font-weight:500;color:var(--muted);letter-spacing:.3px;}
+.mfield label .req{color:var(--red);margin-left:2px;}
+.mfield input,.mfield select{
+  background:rgba(255,255,255,.05);border:0.5px solid var(--border2);
+  border-radius:8px;padding:9px 12px;font-size:13px;color:var(--white);
+  font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,background .15s;width:100%;
+}
+.mfield input:focus,.mfield select:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
+.mfield input::placeholder{color:var(--muted2);}
+.mfield select option{background:var(--navy3);}
+.mrow{display:grid;gap:12px;}
+.mrow.c2{grid-template-columns:1fr 1fr;}
+.mrow.c3{grid-template-columns:1fr 1fr 1fr;}
+.modal-foot{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 24px;border-top:0.5px solid var(--border2);flex-shrink:0;
+}
+.modal-foot-hint{font-size:12px;color:var(--muted);}
+.modal-foot-hint span{color:var(--red);}
+.modal-actions{display:flex;gap:10px;}
+.avatar-picker{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.av-color{
+  width:28px;height:28px;border-radius:6px;cursor:pointer;
+  border:2px solid transparent;transition:all .15s;flex-shrink:0;
+}
+.av-color.sel{border-color:#fff;transform:scale(1.1);}
+.av-preview{
+  width:40px;height:40px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Syne',sans-serif;font-size:15px;font-weight:800;
+  flex-shrink:0;transition:all .2s;
+}
+
+/* TYPE TOGGLE */
+.type-toggle{
+  display:grid;grid-template-columns:1fr 1fr;
+  background:rgba(255,255,255,.04);
+  border:0.5px solid var(--border2);
+  border-radius:10px;padding:4px;gap:4px;
+  margin-bottom:4px;
+}
+.tt-opt{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  padding:10px;border-radius:7px;cursor:pointer;
+  font-size:13.5px;font-weight:500;color:var(--muted);
+  transition:all .18s;border:0.5px solid transparent;
+  user-select:none;
+}
+.tt-opt:hover{color:var(--white);}
+.tt-opt.active{
+  background:var(--blue-g);
+  border-color:rgba(36,86,255,.35);
+  color:#fff;
+}
+.tt-opt svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:1.8;flex-shrink:0;}
+.modal-divider{height:0.5px;background:var(--border);margin:4px 0;}
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--navy3);border:0.5px solid var(--green);border-radius:10px;padding:12px 18px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--white);box-shadow:0 4px 24px rgba(0,0,0,.4);opacity:0;transform:translateY(8px);transition:all .25s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:none;}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo-area">
+    <div>
+      <div class="logo-cds">CDS<span class="dot">·</span></div>
+      <div class="logo-sub">Facturen</div>
+    </div>
+    <div class="logo-div"></div>
+  </div>
+  <div class="topbar-center">
+    <div class="company-pill">
+      <div class="cp-dot"></div>
+      <span>Cornelissen Digital Studio</span>
+      <span class="chev">▾</span>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <span class="plan-badge">Professional</span>
+    <div class="avatar">JC</div>
+  </div>
+</div>
+
+<div class="app-body">
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar">
+    <div class="nav-label">Overzicht</div>
+    <a class="nav-item" href="app.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Dashboard
+    </a>
+    <div class="nav-label">Facturatie</div>
+    <a class="nav-item" href="factuur-aanmaken.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      Facturen
+      <span class="nav-badge">3</span>
+    </a>
+    <a class="nav-item" href="offertes.html">
+      <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/></svg>
+      Offertes
+    </a>
+    <a class="nav-item" href="incasso.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 2v20M2 12h20"/></svg>
+      Automatische incasso
+    </a>
+    <a class="nav-item" href="terugkerend.html">
+      <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Terugkerend
+    </a>
+    <div class="nav-label">Beheer</div>
+    <a class="nav-item active" href="klanten.html">
+      <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+      Klanten
+    </a>
+    <a class="nav-item" href="financieel.html">
+      <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+      Financieel
+    </a>
+    <a class="nav-item" href="bedrijfsprofiel.html">
+      <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+      Bedrijfsprofielen
+    </a>
+    <a class="nav-item" href="instellingen.html">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 010 14.14M4.93 4.93a10 10 0 000 14.14"/></svg>
+      Instellingen
+    </a>
+  </nav>
+
+  <!-- SPLIT -->
+  <div class="split">
+
+    <!-- LIST PANE -->
+    <div class="list-pane">
+      <div class="lp-header">
+        <div class="lp-title-row">
+          <div class="lp-title">Klanten <span style="font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400">7</span></div>
+          <button class="btn-primary" onclick="openModal()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Klant toevoegen
+          </button>
+        </div>
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="search-input" type="text" placeholder="Zoek op naam, e-mail of KvK..." oninput="filterList(this.value)" id="searchInput">
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <div class="fchip on" onclick="setFilter(this,'alle')">Alle klanten</div>
+        <div class="fchip" onclick="setFilter(this,'open')">Openstaand</div>
+        <div class="fchip" onclick="setFilter(this,'incasso')">Incasso actief</div>
+        <div class="fchip" onclick="setFilter(this,'nieuw')">Nieuw dit jaar</div>
+      </div>
+
+      <div class="klant-list" id="klantList">
+        <!-- Items rendered by JS -->
+      </div>
+    </div>
+
+    <!-- DETAIL PANE -->
+    <div class="detail-pane" id="detailPane">
+      <div class="empty-state" id="emptyState">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="empty-title">Selecteer een klant</div>
+        <div class="empty-sub">Klik op een klant in de lijst om de gegevens en factuurhistorie te bekijken.</div>
+      </div>
+      <div id="detailContent" style="display:none"></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- KLANT TOEVOEGEN MODAL -->
+<div class="modal-overlay" id="modalOverlay" onclick="handleOverlayClick(event)">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-title">Klant toevoegen</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- BEDRIJF / PARTICULIER TOGGLE -->
+      <div class="type-toggle">
+        <div class="tt-opt active" id="ttBedrijf" onclick="setKlantType('bedrijf')">
+          <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
+          Bedrijf
+        </div>
+        <div class="tt-opt" id="ttParticulier" onclick="setKlantType('particulier')">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          Particulier
+        </div>
+      </div>
+
+      <!-- NAAM / BEDRIJFSNAAM -->
+      <div class="mrow c2">
+        <div class="mfield" id="mf_bedrijfsnaam">
+          <label>Bedrijfsnaam <span class="req">*</span></label>
+          <input type="text" id="m_naam" placeholder="Naam van het bedrijf" oninput="updateAvPreview()">
+        </div>
+        <div class="mfield" id="mf_voornaam" style="display:none">
+          <label>Voornaam <span class="req">*</span></label>
+          <input type="text" id="m_voornaam" placeholder="Voornaam" oninput="updateAvPreview()">
+        </div>
+        <div class="mfield" id="mf_achternaam" style="display:none">
+          <label>Achternaam <span class="req">*</span></label>
+          <input type="text" id="m_achternaam" placeholder="Achternaam" oninput="updateAvPreview()">
+        </div>
+        <div class="mfield">
+          <label>E-mailadres <span class="req">*</span></label>
+          <input type="email" id="m_email" placeholder="naam@bedrijf.nl">
+        </div>
+      </div>
+
+      <!-- BEDRIJFSGEGEVENS (alleen bij bedrijf) -->
+      <div id="bedrijfsBlok">
+        <div class="modal-divider"></div>
+        <div class="modal-section-label">Bedrijfsgegevens</div>
+        <div class="mrow c2">
+          <div class="mfield">
+            <label>Rechtsvorm</label>
+            <select id="m_type">
+              <option value="">Selecteer...</option>
+              <option>Eenmanszaak</option>
+              <option>Besloten Vennootschap (B.V.)</option>
+              <option>Naamloze Vennootschap (N.V.)</option>
+              <option>Vennootschap Onder Firma (V.O.F.)</option>
+              <option>Stichting</option>
+              <option>Overig</option>
+            </select>
+          </div>
+          <div class="mfield">
+            <label>KvK-nummer</label>
+            <input type="text" id="m_kvk" placeholder="8 cijfers" maxlength="8">
+          </div>
+        </div>
+        <div class="mrow c2">
+          <div class="mfield">
+            <label>BTW-nummer</label>
+            <input type="text" id="m_btw" placeholder="NL000000000B00">
+          </div>
+          <div class="mfield">
+            <label>IBAN</label>
+            <input type="text" id="m_iban" placeholder="NL00 BANK 0000 0000 00">
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTACTGEGEVENS -->
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Contactgegevens</div>
+      <div class="mrow c2">
+        <div class="mfield">
+          <label>Telefoonnummer</label>
+          <input type="tel" id="m_tel" placeholder="+31 6 00000000">
+        </div>
+        <div class="mfield">
+          <label>Website</label>
+          <input type="url" id="m_web" placeholder="https://bedrijf.nl">
+        </div>
+      </div>
+
+      <!-- ADRES -->
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Adres</div>
+      <div class="mrow c2">
+        <div class="mfield" style="grid-column:span 2">
+          <label>Straat en huisnummer</label>
+          <input type="text" id="m_straat" placeholder="Straatnaam 0">
+        </div>
+      </div>
+      <div class="mrow c3">
+        <div class="mfield">
+          <label>Postcode</label>
+          <input type="text" id="m_postcode" placeholder="0000 AA">
+        </div>
+        <div class="mfield">
+          <label>Plaats</label>
+          <input type="text" id="m_plaats" placeholder="Plaatsnaam">
+        </div>
+        <div class="mfield">
+          <label>Land</label>
+          <select id="m_land">
+            <option selected>Nederland</option>
+            <option>België</option>
+            <option>Duitsland</option>
+            <option>Overig</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- WEERGAVE -->
+      <div class="modal-divider"></div>
+      <div class="modal-section-label">Weergave</div>
+      <div class="mfield">
+        <label>Kleur klantkaart</label>
+        <div class="avatar-picker">
+          <div class="av-color sel" style="background:#2456ff" onclick="pickColor(this,'#2456ff')"></div>
+          <div class="av-color" style="background:#10b981" onclick="pickColor(this,'#10b981')"></div>
+          <div class="av-color" style="background:#7c3aed" onclick="pickColor(this,'#7c3aed')"></div>
+          <div class="av-color" style="background:#f59e0b" onclick="pickColor(this,'#f59e0b')"></div>
+          <div class="av-color" style="background:#ef4444" onclick="pickColor(this,'#ef4444')"></div>
+          <div class="av-color" style="background:#ec4899" onclick="pickColor(this,'#ec4899')"></div>
+          <div class="av-color" style="background:#14b8a6" onclick="pickColor(this,'#14b8a6')"></div>
+          <div class="av-color" style="background:#f97316" onclick="pickColor(this,'#f97316')"></div>
+          <div class="av-preview" id="avPreview" style="background:#2456ff22;color:#2456ff">??</div>
+        </div>
+      </div>
+
+    </div>
+    <div class="modal-foot">
+      <div class="modal-foot-hint">Velden met <span>*</span> zijn verplicht</div>
+      <div class="modal-actions">
+        <button class="btn-secondary" onclick="closeModal()">Annuleren</button>
+        <button class="btn-primary" onclick="saveKlant()">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+          Klant opslaan
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+  <!-- TOAST -->
+<div class="toast" id="toast">
+  <div class="toast-dot"></div>
+  <span id="toastMsg">Opgeslagen</span>
+</div>
+
+<script>
+// ── DATA — start leeg, nieuwe klanten worden hier aan toegevoegd ──
+let klanten = [];
+let activeId = null;
+let activeTab = 'gegevens';
+let activeFilter = 'alle';
+let selectedColor = '#2456ff';
+
+// ── HELPERS ──
+function fmt(n){ return '€\u00a0'+n.toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function initials(naam){
+  const w = naam.trim().split(/\s+/);
+  if(w.length===1) return naam.substring(0,2).toUpperCase();
+  return (w[0][0]+(w[w.length-1][0])).toUpperCase();
+}
+
+function updateCount(){
+  document.querySelector('.lp-title').innerHTML =
+    `Klanten <span style="font-size:13px;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:400">${klanten.length}</span>`;
+}
+
+// ── RENDER LIST ──
+function renderList(items){
+  const el = document.getElementById('klantList');
+  if(!items.length){
+    el.innerHTML = `
+      <div style="padding:48px 24px;text-align:center;">
+        <div style="width:44px;height:44px;background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" stroke-width="1.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+        </div>
+        <div style="font-family:'Syne',sans-serif;font-size:14px;font-weight:600;color:#fff;margin-bottom:6px;">Nog geen klanten</div>
+        <div style="font-size:12.5px;color:var(--muted);line-height:1.6;max-width:220px;margin:0 auto 18px;">Voeg uw eerste klant toe om facturen aan te kunnen sturen.</div>
+        <button class="btn-primary" onclick="openModal()" style="margin:0 auto;">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Eerste klant toevoegen
+        </button>
+      </div>`;
+    return;
+  }
+  el.innerHTML = items.map(k=>`
+    <div class="klant-item${activeId===k.id?' active':''}" onclick="openDetail(${k.id})">
+      <div class="ki-av" style="background:${k.color}22;color:${k.color}">${k.init}</div>
+      <div class="ki-info">
+        <div class="ki-naam">${k.naam}</div>
+        <div class="ki-email">${k.email||'Geen e-mail'}</div>
+      </div>
+      <div class="ki-right">
+        <div class="ki-bedrag">${fmt(k.omzet)}</div>
+        <div class="ki-status ${k.open>0?'open':'ok'}">${k.open>0?'€'+k.open.toLocaleString('nl-NL')+' open':'Alles betaald'}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterList(q){
+  const f = q.toLowerCase();
+  const filtered = klanten.filter(k=>
+    k.naam.toLowerCase().includes(f)||
+    (k.email||'').toLowerCase().includes(f)||
+    (k.kvk||'').includes(f)
+  );
+  renderList(filtered);
+}
+
+function setFilter(el, type){
+  document.querySelectorAll('.fchip').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  activeFilter = type;
+  let filtered = klanten;
+  if(type==='open') filtered = klanten.filter(k=>k.open>0);
+  if(type==='incasso') filtered = klanten.filter(k=>k.incasso);
+  if(type==='nieuw') filtered = klanten.filter(k=>k.facturen<=2);
+  renderList(filtered);
+}
+
+function getFilteredList(){
+  const q = document.getElementById('searchInput').value.toLowerCase();
+  let list = klanten;
+  if(activeFilter==='open') list=klanten.filter(k=>k.open>0);
+  if(activeFilter==='incasso') list=klanten.filter(k=>k.incasso);
+  if(activeFilter==='nieuw') list=klanten.filter(k=>k.facturen<=2);
+  return q ? list.filter(k=>k.naam.toLowerCase().includes(q)||(k.email||'').toLowerCase().includes(q)) : list;
+}
+
+// ── MODAL & TYPE TOGGLE ──
+let klantType = 'bedrijf'; // 'bedrijf' | 'particulier'
+
+function setKlantType(type){
+  klantType = type;
+  document.getElementById('ttBedrijf').classList.toggle('active', type==='bedrijf');
+  document.getElementById('ttParticulier').classList.toggle('active', type==='particulier');
+
+  const isBedrijf = type === 'bedrijf';
+
+  // Naam velden
+  document.getElementById('mf_bedrijfsnaam').style.display = isBedrijf ? '' : 'none';
+  document.getElementById('mf_voornaam').style.display    = isBedrijf ? 'none' : '';
+  document.getElementById('mf_achternaam').style.display  = isBedrijf ? 'none' : '';
+
+  // Bedrijfsblok (kvk, btw, rechtsvorm, iban)
+  document.getElementById('bedrijfsBlok').style.display = isBedrijf ? '' : 'none';
+
+  // Reset naam velden
+  document.getElementById('m_naam').value = '';
+  document.getElementById('m_voornaam').value = '';
+  document.getElementById('m_achternaam').value = '';
+  updateAvPreview();
+}
+
+function openModal(){
+  ['m_naam','m_voornaam','m_achternaam','m_email','m_tel','m_kvk','m_btw','m_iban','m_web','m_straat','m_postcode','m_plaats'].forEach(id=>{
+    const el = document.getElementById(id);
+    if(el) el.value='';
+  });
+  document.getElementById('m_type').selectedIndex = 0;
+  document.getElementById('m_land').selectedIndex = 0;
+  selectedColor = '#2456ff';
+  document.querySelectorAll('.av-color').forEach(c=>c.classList.remove('sel'));
+  document.querySelector('.av-color').classList.add('sel');
+  document.getElementById('avPreview').style.background = '#2456ff22';
+  document.getElementById('avPreview').style.color = '#2456ff';
+  document.getElementById('avPreview').textContent = '??';
+  // Reset to bedrijf
+  setKlantType('bedrijf');
+  document.getElementById('modalOverlay').classList.add('open');
+}
+
+function closeModal(){
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+
+function handleOverlayClick(e){
+  if(e.target === document.getElementById('modalOverlay')) closeModal();
+}
+
+function pickColor(el, hex){
+  document.querySelectorAll('.av-color').forEach(c=>c.classList.remove('sel'));
+  el.classList.add('sel');
+  selectedColor = hex;
+  const prev = document.getElementById('avPreview');
+  prev.style.background = hex+'22';
+  prev.style.color = hex;
+  updateAvPreview();
+}
+
+function updateAvPreview(){
+  let naam = '';
+  if(klantType === 'bedrijf'){
+    naam = document.getElementById('m_naam').value;
+  } else {
+    const vn = document.getElementById('m_voornaam').value;
+    const an = document.getElementById('m_achternaam').value;
+    naam = (vn + ' ' + an).trim();
+  }
+  document.getElementById('avPreview').textContent = naam ? initials(naam) : '??';
+}
+
+function saveKlant(){
+  let naam = '';
+  if(klantType === 'bedrijf'){
+    naam = document.getElementById('m_naam').value.trim();
+    if(!naam){ highlight('m_naam'); showToast('Bedrijfsnaam is verplicht','var(--red)'); return; }
+  } else {
+    const vn = document.getElementById('m_voornaam').value.trim();
+    const an = document.getElementById('m_achternaam').value.trim();
+    naam = (vn + ' ' + an).trim();
+    if(!vn){ highlight('m_voornaam'); showToast('Voornaam is verplicht','var(--red)'); return; }
+  }
+  const email = document.getElementById('m_email').value.trim();
+  if(!email){ highlight('m_email'); showToast('E-mailadres is verplicht','var(--red)'); return; }
+
+  const adres = [
+    document.getElementById('m_straat').value,
+    document.getElementById('m_postcode').value,
+    document.getElementById('m_plaats').value
+  ].filter(Boolean).join(', ');
+
+  const newKlant = {
+    id: Date.now(),
+    naam,
+    type: klantType === 'particulier' ? 'Particulier' : (document.getElementById('m_type').value || 'Bedrijf'),
+    init: initials(naam),
+    color: selectedColor,
+    email,
+    telefoon: document.getElementById('m_tel').value || '',
+    website: (document.getElementById('m_web').value || '').replace('https://','').replace('http://',''),
+    adres: adres || '',
+    kvk: klantType === 'bedrijf' ? document.getElementById('m_kvk').value : '',
+    btw: klantType === 'bedrijf' ? document.getElementById('m_btw').value : '',
+    omzet: 0,
+    open: 0,
+    facturen: 0,
+    incasso: false,
+    notitie: '',
+    history: []
+  };
+
+  klanten.push(newKlant);
+  updateCount();
+  closeModal();
+  renderList(getFilteredList());
+  showToast(`${naam} toegevoegd`);
+  setTimeout(()=>openDetail(newKlant.id), 200);
+}
+
+function highlight(id){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.style.borderColor = 'var(--red)';
+  el.focus();
+  setTimeout(()=>el.style.borderColor='', 2000);
+}
+
+function openEditModal(id){
+  const k = klanten.find(x=>x.id===id);
+  if(!k) return;
+  openModal();
+  setTimeout(()=>{
+    const isParticulier = k.type === 'Particulier';
+    setKlantType(isParticulier ? 'particulier' : 'bedrijf');
+    if(isParticulier){
+      const parts = k.naam.split(' ');
+      document.getElementById('m_voornaam').value = parts[0]||'';
+      document.getElementById('m_achternaam').value = parts.slice(1).join(' ')||'';
+    } else {
+      document.getElementById('m_naam').value = k.naam;
+    }
+    document.getElementById('m_email').value = k.email||'';
+    document.getElementById('m_tel').value = k.telefoon||'';
+    document.getElementById('m_kvk').value = k.kvk||'';
+    document.getElementById('m_btw').value = k.btw||'';
+    document.getElementById('m_web').value = k.website||'';
+    updateAvPreview();
+  }, 50);
+}
+
+// ── DETAIL ──
+function openDetail(id){
+  activeId = id;
+  const k = klanten.find(x=>x.id===id);
+  if(!k) return;
+  renderList(getFilteredList());
+  document.getElementById('emptyState').style.display='none';
+  const dc = document.getElementById('detailContent');
+  dc.style.display='block';
+  dc.innerHTML = buildDetail(k);
+}
+
+function statusPill(s){
+  const map={betaald:'s-g',open:'s-a',verlopen:'s-r',incasso:'s-b'};
+  const lbl={betaald:'Betaald',open:'Openstaand',verlopen:'Verlopen',incasso:'Incasso'};
+  return `<span class="spill ${map[s]||'s-g'}"><span class="d"></span>${lbl[s]||s}</span>`;
+}
+
+function buildDetail(k){
+  return `
+  <div class="dp-header">
+    <div class="dp-identity">
+      <div class="dp-av" style="background:${k.color}22;color:${k.color}">${k.init}</div>
+      <div>
+        <div class="dp-name">${k.naam}</div>
+        <div class="dp-type">${k.type} · ${k.facturen} facturen · ${k.incasso?'<span style="color:var(--green)">Incasso actief</span>':'Geen incasso'}</div>
+      </div>
+    </div>
+    <div class="dp-actions">
+      <button class="btn-secondary" onclick="showToast('Factuur aanmaken voor ${k.naam}')">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Factuur aanmaken
+      </button>
+      <button class="btn-secondary" onclick="openEditModal(${k.id})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        Bewerken
+      </button>
+    </div>
+  </div>
+  <div class="kpi-strip">
+    <div class="kpi-c b"><div class="kpi-l">Totale omzet</div><div class="kpi-v">${fmt(k.omzet)}</div><div class="kpi-s">${k.facturen} facturen totaal</div></div>
+    <div class="kpi-c ${k.open>0?'a':'g'}"><div class="kpi-l">Openstaand</div><div class="kpi-v">${fmt(k.open)}</div><div class="kpi-s">${k.open>0?'Betaling verwacht':'Alles voldaan'}</div></div>
+    <div class="kpi-c g"><div class="kpi-l">Incasso</div><div class="kpi-v">${k.incasso?'Actief':'Inactief'}</div><div class="kpi-s">${k.incasso?'SEPA-machtiging actief':'Niet ingesteld'}</div></div>
+    <div class="kpi-c b"><div class="kpi-l">Facturen</div><div class="kpi-v">${k.facturen}</div><div class="kpi-s">Alle periodes</div></div>
+  </div>
+  <div class="dp-tabs">
+    <div class="dp-tab ${activeTab==='gegevens'?'active':''}" onclick="switchTab('gegevens',${k.id})">Contactgegevens</div>
+    <div class="dp-tab ${activeTab==='facturen'?'active':''}" onclick="switchTab('facturen',${k.id})">Factuurhistorie</div>
+    <div class="dp-tab ${activeTab==='notities'?'active':''}" onclick="switchTab('notities',${k.id})">Notities</div>
+  </div>
+  ${activeTab==='gegevens' ? buildGegevens(k) : ''}
+  ${activeTab==='facturen' ? buildFacturen(k) : ''}
+  ${activeTab==='notities' ? buildNotities(k) : ''}`;
+}
+
+function buildGegevens(k){
+  return `
+  <div class="contact-grid">
+    <div class="contact-card">
+      <div class="cc-label">Contactgegevens</div>
+      ${k.email?`<div class="cc-row"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span class="cc-val"><a href="mailto:${k.email}">${k.email}</a></span></div>`:''}
+      ${k.telefoon?`<div class="cc-row"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .19h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><span class="cc-val">${k.telefoon}</span></div>`:''}
+      ${k.website?`<div class="cc-row"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg><span class="cc-val"><a href="https://${k.website}" style="color:var(--blue2)">${k.website}</a></span></div>`:''}
+      ${k.adres?`<div class="cc-row"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span class="cc-val">${k.adres}</span></div>`:''}
+      ${!k.email&&!k.telefoon&&!k.adres?`<div style="font-size:13px;color:var(--muted)">Geen contactgegevens ingevuld.</div>`:''}
+    </div>
+    <div class="contact-card">
+      <div class="cc-label">Bedrijfsgegevens</div>
+      <div class="cc-row"><svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg><span class="cc-val">${k.type}</span></div>
+      ${k.kvk?`<div class="cc-row"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span class="cc-val">KvK: ${k.kvk}</span></div>`:''}
+      ${k.btw?`<div class="cc-row"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span class="cc-val">BTW: ${k.btw}</span></div>`:''}
+    </div>
+  </div>`;
+}
+
+function buildFacturen(k){
+  if(!k.history||!k.history.length) return `
+    <div style="padding:32px;text-align:center;background:var(--surface);border:0.5px solid var(--border2);border-radius:12px;">
+      <div style="font-size:13px;color:var(--muted)">Nog geen facturen voor deze klant.</div>
+      <button class="btn-primary" style="margin:14px auto 0" onclick="showToast('Factuur aanmaken voor ${k.naam}')">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Eerste factuur aanmaken
+      </button>
+    </div>`;
+  return `
+  <div class="hist-table">
+    <div class="ht-head">
+      <span>Nummer</span><span>Omschrijving</span>
+      <span class="r">Datum</span><span class="r">Bedrag</span><span class="r">Status</span>
+    </div>
+    ${k.history.map(h=>`
+    <div class="ht-row" onclick="showToast('Factuur ${h.num} openen')">
+      <div class="ht-num">${h.num}</div>
+      <div class="ht-desc">${h.omschr}</div>
+      <div class="ht-date">${h.datum}</div>
+      <div class="ht-amount">${fmt(h.bedrag)}</div>
+      <div class="ht-status">${statusPill(h.status)}</div>
+    </div>`).join('')}
+  </div>`;
+}
+
+function buildNotities(k){
+  return `
+  <div class="note-area">
+    <textarea rows="5" id="noteText_${k.id}" placeholder="Voeg een notitie toe over deze klant...">${k.notitie||''}</textarea>
+  </div>
+  <button class="btn-primary" onclick="saveNote(${k.id})">Notitie opslaan</button>`;
+}
+
+function saveNote(id){
+  const k = klanten.find(x=>x.id===id);
+  if(k){ k.notitie = document.getElementById('noteText_'+id).value; }
+  showToast('Notitie opgeslagen');
+}
+
+function switchTab(tab, id){ activeTab=tab; openDetail(id); }
+
+
+// ── TOAST ──
+function showToast(msg, color){
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  t.style.borderColor = color||'var(--green)';
+  t.querySelector('.toast-dot').style.background = color||'var(--green)';
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+// ── INIT — start leeg ──
+renderList(klanten);
+updateCount();
+</script>
+</body>
+</html>

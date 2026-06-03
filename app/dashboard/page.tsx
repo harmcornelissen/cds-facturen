@@ -1,64 +1,81 @@
-import AppLayout from '@/components/AppLayout'
+'use client'
+
 import Link from 'next/link'
+import { Button, EmptyState, KpiCard, SectionCard, StatusPill } from '@/app/components/ui'
+import { colors, fonts, grid, mainScroll, pageHeader, tdStyle, thStyle, titleStyle } from '@/app/lib/theme'
+import { fmtCurrency, fmtDate, invoiceTotals, resolveInvoiceStatus, useInvoices } from '@/app/lib/data'
 
 export default function DashboardPage() {
+  const [invoices] = useInvoices()
+  const enriched = invoices.map((invoice) => ({ invoice, status: resolveInvoiceStatus(invoice), totals: invoiceTotals(invoice) }))
+  const unpaid = enriched.filter((item) => item.status === 'verzonden' || item.status === 'openstaand' || item.status === 'verlopen' || item.status === 'incasso')
+  const paidRevenue = enriched.filter((item) => item.status === 'betaald').reduce((sum, item) => sum + item.totals.total, 0)
+  const recent = [...enriched].sort((a, b) => (b.invoice.createdAt || b.invoice.date).localeCompare(a.invoice.createdAt || a.invoice.date)).slice(0, 5)
+
   return (
-    <AppLayout>
-      <div className="main">
-        <div className="page-header">
-          <div className="page-title">Dashboard</div>
-          <Link href="/facturen/nieuw" className="btn-primary">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <line x1="12" y1="5" x2="12" y2="19" />
-              <line x1="5" y1="12" x2="19" y2="12" />
-            </svg>
-            Nieuwe factuur
-          </Link>
+    <main style={mainScroll}>
+      <div style={pageHeader}>
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ ...titleStyle, margin: 0 }}>Dashboard</h1>
+          <div style={{ color: colors.muted, fontSize: 13, marginTop: 5 }}>Uw facturatie in een compact overzicht.</div>
         </div>
-
-        <div className="kpi-grid">
-          <div className="kpi-card blue">
-            <div className="kpi-label">Omzet deze maand</div>
-            <div className="kpi-value">€ 0,00</div>
-            <div className="kpi-sub">Eerste maand</div>
-          </div>
-          <div className="kpi-card amber">
-            <div className="kpi-label">Openstaand</div>
-            <div className="kpi-value">€ 0,00</div>
-            <div className="kpi-sub">0 facturen open</div>
-          </div>
-          <div className="kpi-card red">
-            <div className="kpi-label">Verlopen</div>
-            <div className="kpi-value">€ 0,00</div>
-            <div className="kpi-sub">0 facturen verlopen</div>
-          </div>
-          <div className="kpi-card green">
-            <div className="kpi-label">Incasso actief</div>
-            <div className="kpi-value">0</div>
-            <div className="kpi-sub">SEPA-machtigingen</div>
-          </div>
-        </div>
-
-        <div className="section-card">
-          <div className="section-head">
-            <span className="section-title">Recente facturen</span>
-            <Link href="/facturen" style={{ fontSize: '12px', color: 'var(--blue2)', textDecoration: 'none' }}>
-              Alle facturen →
-            </Link>
-          </div>
-          <div className="empty-state">
-            <div className="es-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="rgba(240,244,255,0.45)" strokeWidth="1.4">
-                <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
-                <polyline points="14 2 14 8 20 8" />
-              </svg>
-            </div>
-            <div className="es-title">Nog geen facturen</div>
-            <div className="es-sub">Maak uw eerste factuur aan om te beginnen</div>
-            <Link href="/facturen/nieuw" className="btn-primary">Eerste factuur aanmaken</Link>
-          </div>
-        </div>
+        <Button href="/facturen/nieuw" icon="plus">
+          Nieuwe factuur
+        </Button>
       </div>
-    </AppLayout>
+
+      <div style={{ ...grid(190), marginBottom: 22 }}>
+        <KpiCard label="Open facturen" value={String(unpaid.length)} sub="Nog niet voldaan" color={colors.amber} />
+        <KpiCard label="Openstaand bedrag" value={fmtCurrency(unpaid.reduce((sum, item) => sum + item.totals.total, 0))} sub="Uitstaande posten" color={colors.red} />
+        <KpiCard label="Betaalde omzet" value={fmtCurrency(paidRevenue)} sub="Uit localStorage geladen" color={colors.green} />
+        <KpiCard label="Facturen totaal" value={String(invoices.length)} sub="Alle opgeslagen facturen" color={colors.blue} />
+      </div>
+
+      <SectionCard
+        title="Recente facturen"
+        action={
+          <Link href="/facturen" style={{ color: '#6f8cff', fontSize: 12, textDecoration: 'none' }}>
+            Alle facturen
+          </Link>
+        }
+      >
+        {recent.length === 0 ? (
+          <EmptyState
+            icon="invoice"
+            title="Nog geen facturen"
+            body="Maak uw eerste factuur aan om omzet, openstaande posten en betaalstatussen te volgen."
+            action={<Button href="/facturen/nieuw" icon="plus">Eerste factuur aanmaken</Button>}
+          />
+        ) : (
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', minWidth: 640, borderCollapse: 'collapse' }}>
+              <thead>
+                <tr>
+                  <th style={thStyle}>Factuur</th>
+                  <th style={thStyle}>Klant</th>
+                  <th style={thStyle}>Datum</th>
+                  <th style={thStyle}>Status</th>
+                  <th style={{ ...thStyle, textAlign: 'right' }}>Bedrag</th>
+                </tr>
+              </thead>
+              <tbody>
+                {recent.map(({ invoice, status, totals }) => (
+                  <tr key={invoice.id}>
+                    <td style={tdStyle}>
+                      <div style={{ fontFamily: fonts.heading, fontWeight: 700 }}>{invoice.number}</div>
+                      <div style={{ color: colors.muted, fontSize: 11 }}>{invoice.reference || 'Geen referentie'}</div>
+                    </td>
+                    <td style={tdStyle}>{invoice.clientName || 'Onbekende klant'}</td>
+                    <td style={tdStyle}>{fmtDate(invoice.date)}</td>
+                    <td style={tdStyle}><StatusPill status={status} /></td>
+                    <td style={{ ...tdStyle, textAlign: 'right', fontFamily: fonts.heading, fontWeight: 700 }}>{fmtCurrency(totals.total)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </SectionCard>
+    </main>
   )
 }

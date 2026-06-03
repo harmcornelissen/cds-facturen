@@ -94,7 +94,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .field label .req{color:var(--red);margin-left:1px;}
 .field input,.field select,.field textarea{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:7px;padding:8px 11px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;transition:border-color .15s,background .15s;outline:none;width:100%;}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
-.field input::placeholder{color:var(--muted2);}
+.field input::placeholder,.field textarea::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 .field select option{background:var(--navy3);color:var(--white);}
 
 /* ── KLANT SELECT ── */
@@ -120,7 +120,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .klant-dropdown.open{display:block;}
 .kd-search{padding:10px 14px;border-bottom:0.5px solid var(--border);}
 .kd-search input{background:var(--surface);border:0.5px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:100%;}
-.kd-search input::placeholder{color:var(--muted2);}
+.kd-search input::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 .kd-list{}
 .kd-item{display:flex;align-items:center;gap:10px;padding:10px 14px;cursor:pointer;transition:background .12s;}
 .kd-item:hover{background:var(--surface2);}
@@ -140,7 +140,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .regel-input{background:rgba(255,255,255,.05);border:0.5px solid var(--border2);border-radius:6px;padding:7px 10px;font-size:12.5px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;width:100%;transition:border-color .15s,background .15s;}
 .regel-input:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
 .regel-input.right{text-align:right;}
-.regel-input::placeholder{color:var(--muted2);}
+.regel-input::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 .regel-subtotal{font-size:13px;font-weight:500;color:#fff;text-align:right;font-family:'Syne',sans-serif;}
 .regel-del{width:28px;height:28px;background:transparent;border:0.5px solid transparent;border-radius:6px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s;flex-shrink:0;}
 .regel-del:hover{background:rgba(239,68,68,.12);border-color:rgba(239,68,68,.25);color:var(--red);}
@@ -355,17 +355,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
             </div>
             <div class="field">
               <label>Factuurdatum <span class="req">*</span></label>
-              <input type="date" id="invDate" value="" oninput="updatePreview()">
+              <input type="date" id="invDate" value="" placeholder="2026-06-02" oninput="updatePreview()">
             </div>
             <div class="field">
               <label>Vervaldatum <span class="req">*</span></label>
-              <input type="date" id="invDue" value="" oninput="updatePreview()">
+              <input type="date" id="invDue" value="" placeholder="2026-06-16" oninput="updatePreview()">
             </div>
           </div>
           <div class="field-row c2">
             <div class="field">
               <label>Referentie / projectnaam</label>
-              <input type="text" id="invRef" placeholder="Bijv. Project Q2 2026" oninput="updatePreview()">
+              <input type="text" id="invRef" placeholder="Bijv. projectnaam of PO-nummer" oninput="updatePreview()">
             </div>
             <div class="field">
               <label>Bedrijfsprofiel <span class="req">*</span></label>
@@ -395,9 +395,9 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <div id="regelsList">
             <div class="regel-row" data-id="1">
               <div class="regel-omschrijving">
-                <input class="regel-input" type="text" placeholder="Omschrijving regelitem..." oninput="calcTotals()">
+                <input class="regel-input" type="text" placeholder="Omschrijving van product of dienst" oninput="calcTotals()">
               </div>
-              <input class="regel-input right" type="number" value="1" min="0" step="0.5" oninput="calcTotals()">
+              <input class="regel-input right" type="number" value="1" placeholder="1" min="0" step="0.5" oninput="calcTotals()">
               <input class="regel-input right" type="number" value="" placeholder="0.00" min="0" step="0.01" oninput="calcTotals()">
               <select class="btw-select" onchange="calcTotals()">
                 <option>0%</option><option>9%</option><option selected>21%</option><option>Vrij</option>
@@ -440,8 +440,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
             </div>
           </div>
           <div class="field">
-            <label>Persoonlijk bericht (optioneel)</label>
-            <textarea rows="2" placeholder="Eventueel een persoonlijk bericht aan de klant..."></textarea>
+            <label>Betalingsinstructies</label>
+            <textarea rows="2" placeholder="Bijv. gelieve binnen 14 dagen te betalen"></textarea>
           </div>
           <div class="field">
             <label>Betaalmethode op factuur</label>
@@ -539,8 +539,71 @@ function showToast(msg, color) {
   setTimeout(() => t.classList.remove('show'), 2800);
 }
 
+const KLANTEN_STORAGE_KEY = 'cds_facturen_klanten';
+let klanten = loadKlanten();
+
+function initials(naam) {
+  const words = naam.trim().split(/\s+/);
+  if (words.length === 1) return naam.substring(0, 2).toUpperCase();
+  return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+}
+
+function escapeHtml(value) {
+  return String(value || '').replace(/[&<>"']/g, char => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[char]));
+}
+
+function normalizeKlant(raw, index) {
+  const naam = String(raw && raw.naam ? raw.naam : '').trim();
+  if (!naam) return null;
+  const id = Number(raw && raw.id);
+  return {
+    id: Number.isFinite(id) ? id : index + 1,
+    naam,
+    email: String(raw && raw.email ? raw.email : ''),
+    init: String(raw && raw.init ? raw.init : initials(naam)),
+    color: String(raw && raw.color ? raw.color : '#2456ff')
+  };
+}
+
+function loadKlanten() {
+  try {
+    const stored = localStorage.getItem(KLANTEN_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed.map(normalizeKlant).filter(Boolean) : [];
+  } catch (e) {
+    console.warn('Klanten konden niet worden geladen', e);
+    return [];
+  }
+}
+
+function renderKlanten() {
+  const list = document.getElementById('kdList');
+  if (!list) return;
+  klanten = loadKlanten();
+  if (!klanten.length) {
+    list.innerHTML = '<div style="padding:16px;text-align:center;font-size:13px;color:var(--muted)">Nog geen klanten. Voeg eerst een klant toe.</div>';
+    return;
+  }
+
+  list.innerHTML = klanten.map(k => `
+    <div class="kd-item" onclick="selectKlantById(${k.id})">
+      <div class="kd-av" style="background:${escapeHtml(k.color)}22;color:${escapeHtml(k.color)}">${escapeHtml(k.init)}</div>
+      <div>
+        <div class="kd-naam">${escapeHtml(k.naam)}</div>
+        <div class="kd-email">${escapeHtml(k.email || 'Geen e-mail')}</div>
+      </div>
+    </div>`).join('');
+}
+
 // ── KLANT DROPDOWN ──
 function toggleDropdown() {
+  renderKlanten();
   document.getElementById('klantDropdown').classList.toggle('open');
 }
 document.addEventListener('click', e => {
@@ -558,6 +621,11 @@ function selectKlant(naam, email, init, color) {
   document.getElementById('prevToDetail').textContent = email;
   document.getElementById('klantDropdown').classList.remove('open');
   calcTotals();
+}
+function selectKlantById(id) {
+  const klant = klanten.find(k => k.id === Number(id));
+  if (!klant) return;
+  selectKlant(klant.naam, klant.email, klant.init, klant.color);
 }
 function filterKlanten(q) {
   document.querySelectorAll('.kd-item').forEach(item => {
@@ -611,9 +679,9 @@ function addRegel() {
   div.className = 'regel-row';
   div.dataset.id = regelId;
   div.innerHTML = `
-    <div class="regel-omschrijving"><input class="regel-input" type="text" placeholder="Omschrijving regelitem..." oninput="calcTotals()"></div>
-    <input class="regel-input right" type="number" value="1" min="0" step="0.5" oninput="calcTotals()">
-    <input class="regel-input right" type="number" value="0.00" min="0" step="0.01" oninput="calcTotals()">
+    <div class="regel-omschrijving"><input class="regel-input" type="text" placeholder="Omschrijving van product of dienst" oninput="calcTotals()"></div>
+    <input class="regel-input right" type="number" value="1" placeholder="1" min="0" step="0.5" oninput="calcTotals()">
+    <input class="regel-input right" type="number" value="0.00" placeholder="0.00" min="0" step="0.01" oninput="calcTotals()">
     <select class="btw-select" onchange="calcTotals()">
       <option>0%</option><option>9%</option><option selected>21%</option><option>Vrij</option>
     </select>
@@ -659,6 +727,7 @@ function sendInvoice() {
 }
 
 // Init
+renderKlanten();
 calcTotals();
 updatePreview();
 </script>

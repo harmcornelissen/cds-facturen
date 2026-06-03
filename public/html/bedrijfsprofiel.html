@@ -179,7 +179,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   border-color:rgba(36,86,255,.5);
   background:rgba(36,86,255,.06);
 }
-.field input::placeholder,.field textarea::placeholder{color:var(--muted2);}
+.field input::placeholder,.field textarea::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 .field select option{background:var(--navy3);color:var(--white);}
 .field textarea{resize:vertical;min-height:80px;line-height:1.5;}
 .field-hint{font-size:11.5px;color:var(--muted2);line-height:1.5;}
@@ -421,7 +421,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         <div class="fs-body">
           <div class="field">
             <label>Bedrijfsnaam <span>*</span></label>
-            <input type="text" value="" placeholder="Naam van uw bedrijf">
+            <input type="text" value="" placeholder="Bijv. CDS Facturen">
           </div>
           <div class="field-row">
             <div class="field">
@@ -437,7 +437,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
             </div>
             <div class="field">
               <label>KvK-nummer <span>*</span></label>
-              <input type="text" value="" placeholder="8 cijfers">
+              <input type="text" value="" placeholder="12345678">
               <div class="field-status status-ok">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                 Geverifieerd via KvK
@@ -447,7 +447,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <div class="field-row">
             <div class="field">
               <label>BTW-nummer</label>
-              <input type="text" value="" placeholder="NL000000000B00">
+              <input type="text" value="" placeholder="NL000000000B01">
               <div class="field-status status-ok">
                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
                 Geldig BTW-nummer
@@ -464,7 +464,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           </div>
           <div class="field">
             <label>Tenaamstelling IBAN</label>
-            <input type="text" value="" placeholder="Naam rekeninghouder">
+            <input type="text" value="" placeholder="Volledige bedrijfsnaam">
           </div>
         </div>
       </div>
@@ -503,7 +503,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
               <div class="color-swatch" style="background:#0d1224;border:0.5px solid rgba(255,255,255,.2)" onclick="selectColor(this,'#0d1224')"></div>
               <div class="color-input-wrap">
                 <div class="color-dot" id="colorDot"></div>
-                <input type="text" id="colorInput" value="#2456ff" placeholder="#000000">
+                <input type="text" id="colorInput" value="#2456ff" placeholder="#2456ff">
               </div>
             </div>
             <div class="field-hint">Deze kleur wordt gebruikt in de koptekst en accentelementen van uw factuursjabloon.</div>
@@ -529,17 +529,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <div class="field-row">
             <div class="field">
               <label>Straat &amp; huisnummer <span>*</span></label>
-              <input type="text" value="" placeholder="Straatnaam 0">
+              <input type="text" value="" placeholder="Straatnaam 1">
             </div>
             <div class="field">
               <label>Postcode <span>*</span></label>
-              <input type="text" value="" placeholder="0000 AA">
+              <input type="text" value="" placeholder="1234 AB">
             </div>
           </div>
           <div class="field-row">
             <div class="field">
               <label>Plaats <span>*</span></label>
-              <input type="text" value="" placeholder="Plaatsnaam">
+              <input type="text" value="" placeholder="Amsterdam">
             </div>
             <div class="field">
               <label>Land</label>
@@ -554,7 +554,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           <div class="field-row">
             <div class="field">
               <label>E-mailadres <span>*</span></label>
-              <input type="email" value="" placeholder="naam@bedrijf.nl">
+              <input type="email" value="" placeholder="info@uwbedrijf.nl">
             </div>
             <div class="field">
               <label>Telefoonnummer</label>

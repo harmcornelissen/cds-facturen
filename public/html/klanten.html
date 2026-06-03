@@ -63,7 +63,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 .search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);width:14px;height:14px;stroke:var(--muted);fill:none;stroke-width:2;pointer-events:none;}
 .search-input{width:100%;background:var(--surface);border:0.5px solid var(--border2);border-radius:8px;padding:8px 12px 8px 32px;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s;}
 .search-input:focus{border-color:rgba(36,86,255,.45);}
-.search-input::placeholder{color:var(--muted2);}
+.search-input::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 
 /* FILTER CHIPS */
 .filter-row{display:flex;gap:6px;padding:10px 20px;border-bottom:0.5px solid var(--border2);overflow-x:auto;}
@@ -153,7 +153,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 /* NOTITIES */
 .note-area{background:var(--surface);border:0.5px solid var(--border2);border-radius:10px;padding:14px;margin-bottom:14px;}
 .note-area textarea{width:100%;background:transparent;border:none;font-size:13px;color:var(--white);font-family:'DM Sans',sans-serif;resize:none;outline:none;line-height:1.6;}
-.note-area textarea::placeholder{color:var(--muted2);}
+.note-area textarea::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 
 /* EMPTY STATE */
 .empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px;}
@@ -214,7 +214,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
   font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,background .15s;width:100%;
 }
 .mfield input:focus,.mfield select:focus{border-color:rgba(36,86,255,.5);background:rgba(36,86,255,.06);}
-.mfield input::placeholder{color:var(--muted2);}
+.mfield input::placeholder{color:rgba(240,244,255,0.25);opacity:1;}
 .mfield select option{background:var(--navy3);}
 .mrow{display:grid;gap:12px;}
 .mrow.c2{grid-template-columns:1fr 1fr;}
@@ -409,7 +409,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="mrow c2">
         <div class="mfield" id="mf_bedrijfsnaam">
           <label>Bedrijfsnaam <span class="req">*</span></label>
-          <input type="text" id="m_naam" placeholder="Naam van het bedrijf" oninput="updateAvPreview()">
+          <input type="text" id="m_naam" placeholder="Bedrijfsnaam of volledige naam" oninput="updateAvPreview()">
         </div>
         <div class="mfield" id="mf_voornaam" style="display:none">
           <label>Voornaam <span class="req">*</span></label>
@@ -421,7 +421,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         </div>
         <div class="mfield">
           <label>E-mailadres <span class="req">*</span></label>
-          <input type="email" id="m_email" placeholder="naam@bedrijf.nl">
+          <input type="email" id="m_email" placeholder="klant@bedrijf.nl">
         </div>
       </div>
 
@@ -444,13 +444,13 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
           </div>
           <div class="mfield">
             <label>KvK-nummer</label>
-            <input type="text" id="m_kvk" placeholder="8 cijfers" maxlength="8">
+            <input type="text" id="m_kvk" placeholder="12345678" maxlength="8">
           </div>
         </div>
         <div class="mrow c2">
           <div class="mfield">
             <label>BTW-nummer</label>
-            <input type="text" id="m_btw" placeholder="NL000000000B00">
+            <input type="text" id="m_btw" placeholder="NL000000000B01">
           </div>
           <div class="mfield">
             <label>IBAN</label>
@@ -469,7 +469,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
         </div>
         <div class="mfield">
           <label>Website</label>
-          <input type="url" id="m_web" placeholder="https://bedrijf.nl">
+          <input type="url" id="m_web" placeholder="https://klant.nl">
         </div>
       </div>
 
@@ -479,17 +479,17 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
       <div class="mrow c2">
         <div class="mfield" style="grid-column:span 2">
           <label>Straat en huisnummer</label>
-          <input type="text" id="m_straat" placeholder="Straatnaam 0">
+          <input type="text" id="m_straat" placeholder="Straatnaam 1">
         </div>
       </div>
       <div class="mrow c3">
         <div class="mfield">
           <label>Postcode</label>
-          <input type="text" id="m_postcode" placeholder="0000 AA">
+          <input type="text" id="m_postcode" placeholder="1234 AB">
         </div>
         <div class="mfield">
           <label>Plaats</label>
-          <input type="text" id="m_plaats" placeholder="Plaatsnaam">
+          <input type="text" id="m_plaats" placeholder="Amsterdam">
         </div>
         <div class="mfield">
           <label>Land</label>
@@ -543,7 +543,28 @@ body{font-family:'DM Sans',sans-serif;background:var(--navy);color:var(--white);
 
 <script>
 // ── DATA — start leeg, nieuwe klanten worden hier aan toegevoegd ──
-let klanten = [];
+const KLANTEN_STORAGE_KEY = 'cds_facturen_klanten';
+
+function loadKlanten(){
+  try {
+    const stored = localStorage.getItem(KLANTEN_STORAGE_KEY);
+    const parsed = stored ? JSON.parse(stored) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn('Klanten konden niet worden geladen', e);
+    return [];
+  }
+}
+
+function saveKlanten(){
+  try {
+    localStorage.setItem(KLANTEN_STORAGE_KEY, JSON.stringify(klanten));
+  } catch (e) {
+    console.warn('Klanten konden niet worden opgeslagen', e);
+  }
+}
+
+let klanten = loadKlanten();
 let activeId = null;
 let activeTab = 'gegevens';
 let activeFilter = 'alle';
@@ -739,6 +760,7 @@ function saveKlant(){
   };
 
   klanten.push(newKlant);
+  saveKlanten();
   updateCount();
   closeModal();
   renderList(getFilteredList());
@@ -889,6 +911,7 @@ function buildNotities(k){
 function saveNote(id){
   const k = klanten.find(x=>x.id===id);
   if(k){ k.notitie = document.getElementById('noteText_'+id).value; }
+  saveKlanten();
   showToast('Notitie opgeslagen');
 }
 

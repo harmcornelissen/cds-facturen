@@ -364,6 +364,7 @@ nav.scrolled{
 .pc-btn-o:hover{background:rgba(255,255,255,.06)}
 .pc-btn-f{background:var(--blue);color:#fff;}
 .pc-btn-f:hover{opacity:.87}
+.pc-pay-note{font-size:11.5px;color:var(--muted2);line-height:1.45;text-align:center;margin-top:10px}
 
 /* ── INCASSO INFO ── */
 .incasso-block{
@@ -699,7 +700,7 @@ footer{background:var(--navy2);border-top:0.5px solid var(--border2);padding:52p
         <li class="off"><span class="no">✗</span>Meerdere bedrijfsprofielen</li>
         <li class="off"><span class="no">✗</span>Automatische incasso</li>
       </ul>
-      <a href="#" class="pc-btn pc-btn-o">Gratis starten</a>
+      <a href="/register" class="pc-btn pc-btn-o">Gratis starten</a>
     </div>
 
     <div class="pc pop">
@@ -719,7 +720,8 @@ footer{background:var(--navy2);border-top:0.5px solid var(--border2);padding:52p
         <li class="off"><span class="no">✗</span>Meerdere bedrijfsprofielen</li>
         <li class="off"><span class="no">✗</span>Automatische incasso</li>
       </ul>
-      <a href="#" class="pc-btn pc-btn-f">Starten voor €3,99 / maand</a>
+      <a href="/register?plan=basis" class="pc-btn pc-btn-f">Starten voor €3,99/maand</a>
+      <div class="pc-pay-note">Betaling via iDEAL of automatische incasso via Mollie</div>
     </div>
 
     <div class="pc">
@@ -737,7 +739,8 @@ footer{background:var(--navy2);border-top:0.5px solid var(--border2);padding:52p
         <li><span class="ok">✓</span>Extra gebruikers (+ €2,00 / gebruiker)</li>
         <li><span class="ok">✓</span>Prioriteits-support</li>
       </ul>
-      <a href="#" class="pc-btn pc-btn-o">Professional activeren</a>
+      <a href="/register?plan=professional" class="pc-btn pc-btn-o">Professional activeren</a>
+      <div class="pc-pay-note">Betaling via iDEAL of automatische incasso via Mollie</div>
     </div>
 
   </div>

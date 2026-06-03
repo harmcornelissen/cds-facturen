@@ -1,217 +1,341 @@
 'use client'
 
-import { useState } from 'react'
-import AppLayout from '@/components/AppLayout'
+import { useEffect, useState } from 'react'
+import { PlanRestrictionModal } from '@/app/components/DevPlanToolbar'
+import { Button, EmptyState, Field, SelectInput, TextArea, TextInput, Toast } from '@/app/components/ui'
+import { Icon } from '@/app/components/Icon'
+import { colors, fonts, formGrid, grid, inputStyle, mainScroll, pageHeader, titleStyle } from '@/app/lib/theme'
+import { blankCompany, fmtCurrency, invoiceTotals, maxCompanyProfiles, type CompanyProfile, useCompanies, useInvoices, usePlan } from '@/app/lib/data'
 
-type Profiel = {
-  id: number
-  naam: string
-  init: string
-  color: string
-  kvk: string
-  btw: string
-  email: string
-  telefoon: string
-  adres: string
-  iban: string
-}
-
-const COLORS = ['#2456ff', '#10b981', '#7c3aed', '#f59e0b', '#ef4444', '#ec4899']
-
-function initials(naam: string) {
-  const w = naam.trim().split(/\s+/)
-  if (w.length === 1) return naam.substring(0, 2).toUpperCase()
-  return (w[0][0] + w[w.length - 1][0]).toUpperCase()
-}
+const DEFAULT_BRAND_COLOR = '#2456ff'
+const DEFAULT_BRAND_TEXT_COLOR = '#ffffff'
 
 export default function BedrijfsprofielenPage() {
-  const [profielen, setProfielen] = useState<Profiel[]>([])
-  const [activeId, setActiveId] = useState<number | null>(null)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedColor, setSelectedColor] = useState('#2456ff')
+  const [companies, setCompanies] = useCompanies()
+  const [invoices] = useInvoices()
+  const [plan] = usePlan()
+  const [activeId, setActiveId] = useState('')
+  const [draft, setDraft] = useState<CompanyProfile>(blankCompany())
+  const [limitOpen, setLimitOpen] = useState(false)
   const [toast, setToast] = useState('')
-  const [form, setForm] = useState({ naam: '', kvk: '', btw: '', email: '', telefoon: '', straat: '', postcode: '', plaats: '', iban: '', website: '' })
 
-  const activeProfiel = profielen.find(p => p.id === activeId) ?? null
+  const active = companies.find((company) => company.id === activeId)
+  const companyInvoices = invoices.filter((invoice) => invoice.companyId === draft.id || invoice.companyName === draft.name)
+  const revenue = companyInvoices.reduce((sum, invoice) => sum + invoiceTotals(invoice).total, 0)
+  const profileLimit = maxCompanyProfiles(plan)
+  const limitReached = profileLimit !== null && companies.length >= profileLimit
+  const limitLabel = profileLimit === null ? 'onbeperkt' : String(profileLimit)
+  const limitMessage = plan === 'gratis'
+    ? 'Upgrade naar Basis voor meer profielen'
+    : plan === 'basis'
+      ? 'Upgrade naar Professional voor onbeperkte profielen'
+      : ''
 
-  function showToast(msg: string) {
-    setToast(msg)
-    setTimeout(() => setToast(''), 2600)
+  useEffect(() => {
+    if (!activeId && companies[0]) setActiveId(companies[0].id)
+  }, [activeId, companies])
+
+  useEffect(() => {
+    setDraft(active ? normalizeCompanyProfile(active) : blankCompany())
+  }, [active])
+
+  function update<K extends keyof CompanyProfile>(key: K, value: CompanyProfile[K]) {
+    setDraft((current) => ({ ...current, [key]: value }))
   }
 
-  function openModal() {
-    setForm({ naam: '', kvk: '', btw: '', email: '', telefoon: '', straat: '', postcode: '', plaats: '', iban: '', website: '' })
-    setSelectedColor('#2456ff')
-    setModalOpen(true)
+  function updateBrandColor(value: string) {
+    setDraft((current) => ({ ...current, brandColor: value, accentColor: value }))
   }
 
-  function saveProfiel() {
-    if (!form.naam.trim()) { showToast('Bedrijfsnaam is verplicht'); return }
-    const adres = [form.straat, form.postcode, form.plaats].filter(Boolean).join(', ')
-    const newProfiel: Profiel = {
-      id: Date.now(), naam: form.naam, init: initials(form.naam), color: selectedColor,
-      kvk: form.kvk, btw: form.btw, email: form.email, telefoon: form.telefoon,
-      adres, iban: form.iban,
+  function save() {
+    if (!draft.name.trim()) {
+      setToast('Vul een bedrijfsnaam in.')
+      return
     }
-    setProfielen(prev => [...prev, newProfiel])
-    setModalOpen(false)
-    showToast(`${form.naam} toegevoegd`)
-    setTimeout(() => setActiveId(newProfiel.id), 200)
+    const normalizedDraft = normalizeCompanyProfile(draft)
+    const limit = maxCompanyProfiles(plan)
+    const isExisting = companies.some((company) => company.id === normalizedDraft.id)
+    if (!isExisting && limit !== null && companies.length >= limit) {
+      setLimitOpen(true)
+      return
+    }
+    setCompanies((current) => {
+      const exists = current.some((company) => company.id === normalizedDraft.id)
+      return exists ? current.map((company) => (company.id === normalizedDraft.id ? normalizedDraft : company)) : [normalizedDraft, ...current]
+    })
+    setDraft(normalizedDraft)
+    setActiveId(normalizedDraft.id)
+    setToast('Bedrijfsprofiel opgeslagen')
   }
+
+  function createNew() {
+    if (limitReached) {
+      setLimitOpen(true)
+      return
+    }
+    const next = blankCompany()
+    setActiveId('')
+    setDraft(next)
+  }
+
+  function handleLogo(file?: File) {
+    if (!file) return
+    const reader = new FileReader()
+    reader.onload = () => update('logoDataUrl', String(reader.result || ''))
+    reader.readAsDataURL(file)
+  }
+
+  const brandColor = draft.brandColor || draft.accentColor || DEFAULT_BRAND_COLOR
+  const brandTextColor = draft.brandTextColor || DEFAULT_BRAND_TEXT_COLOR
 
   return (
-    <AppLayout>
-      <div className="split">
-        {/* LIST PANE */}
-        <div className="list-pane">
-          <div className="lp-header">
-            <div className="lp-title-row">
-              <div className="lp-title">
-                Bedrijfsprofielen <span style={{ fontSize: 13, color: 'var(--muted)', fontWeight: 400 }}>{profielen.length}</span>
-              </div>
-              <button className="btn-primary" style={{ padding: '8px 14px', fontSize: 12 }} onClick={openModal}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Nieuw profiel
-              </button>
-            </div>
-          </div>
-
-          <div className="klant-list">
-            {profielen.length === 0 ? (
-              <div style={{ padding: '48px 24px', textAlign: 'center' }}>
-                <div style={{ width: 44, height: 44, background: 'var(--surface)', border: '0.5px solid var(--border2)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--muted)" strokeWidth="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-                </div>
-                <div style={{ fontFamily: 'Syne, sans-serif', fontSize: 14, fontWeight: 600, color: '#fff', marginBottom: 6 }}>Nog geen bedrijfsprofielen</div>
-                <div style={{ fontSize: 12.5, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 220, margin: '0 auto 18px' }}>Maak een bedrijfsprofiel aan om facturen te kunnen versturen.</div>
-                <button className="btn-primary" style={{ margin: '0 auto' }} onClick={openModal}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                  Eerste profiel aanmaken
-                </button>
-              </div>
-            ) : profielen.map(p => (
-              <div key={p.id} className={`klant-item${activeId === p.id ? ' active' : ''}`} onClick={() => setActiveId(p.id)}>
-                <div className="ki-av" style={{ background: p.color + '22', color: p.color }}>{p.init}</div>
-                <div className="ki-info">
-                  <div className="ki-naam">{p.naam}</div>
-                  <div className="ki-email">{p.kvk ? `KvK: ${p.kvk}` : p.email || 'Geen gegevens'}</div>
-                </div>
-              </div>
-            ))}
-          </div>
+    <main style={mainScroll}>
+      <div style={pageHeader}>
+        <div style={{ minWidth: 0 }}>
+          <h1 style={{ ...titleStyle, margin: 0 }}>Bedrijfsprofielen</h1>
+          <div style={{ color: colors.muted, fontSize: 13, marginTop: 5 }}>Beheer bedrijfsgegevens, huisstijl en factuurinstellingen.</div>
         </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <span title={limitReached ? limitMessage : undefined} style={{ display: 'inline-flex' }}>
+            <Button variant="secondary" icon="plus" onClick={createNew} disabled={limitReached}>Nieuw profiel</Button>
+          </span>
+          <Button icon="check" onClick={save}>Opslaan</Button>
+        </div>
+      </div>
 
-        {/* DETAIL PANE */}
-        <div className="detail-pane">
-          {!activeProfiel ? (
-            <div className="empty-detail">
-              <div className="empty-icon">
-                <svg viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
-              </div>
-              <div className="empty-title">Selecteer een profiel</div>
-              <div className="empty-sub">Klik op een bedrijfsprofiel in de lijst om de gegevens te bekijken en te bewerken.</div>
+      <section style={{ background: colors.surface, border: `0.5px solid ${colors.border2}`, borderRadius: 8, overflow: 'hidden', marginBottom: 18 }}>
+        <div style={{ padding: '14px 16px', borderBottom: `0.5px solid ${colors.border2}`, display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontFamily: fonts.heading, fontWeight: 800, color: '#fff', fontSize: 14 }}>Profielen</div>
+            <div style={{ color: colors.muted, fontSize: 12, marginTop: 3 }}>{companies.length} van {limitLabel} gebruikt</div>
+          </div>
+          {limitReached && limitMessage ? (
+            <div style={{ color: '#6f8cff', background: colors.blueSoft, border: `0.5px solid rgba(36,86,255,0.35)`, borderRadius: 8, padding: '7px 10px', fontSize: 12, fontWeight: 700 }}>
+              {limitMessage}
             </div>
-          ) : (
-            <>
-              <div className="dp-header">
-                <div className="dp-identity">
-                  <div className="dp-av" style={{ background: activeProfiel.color + '22', color: activeProfiel.color }}>{activeProfiel.init}</div>
-                  <div>
-                    <div className="dp-name">{activeProfiel.naam}</div>
-                    <div className="dp-type">{activeProfiel.kvk ? `KvK: ${activeProfiel.kvk}` : 'Geen KvK'}</div>
+          ) : null}
+        </div>
+        {companies.length === 0 ? (
+          <EmptyState compact icon="company" title="Geen profielen" body="Maak een bedrijfsprofiel aan voor factuurnummers en betaaltermijnen." />
+        ) : (
+          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: 14 }}>
+            {companies.map((company) => {
+              const selected = draft.id === company.id
+              const color = company.brandColor || company.accentColor || DEFAULT_BRAND_COLOR
+              const name = company.name || company.legalName || 'Naamloos profiel'
+              return (
+                <button
+                  type="button"
+                  key={company.id}
+                  onClick={() => setActiveId(company.id)}
+                  style={{
+                    width: 230,
+                    minWidth: 210,
+                    minHeight: 82,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    background: selected ? colors.blueSoft : colors.surface,
+                    border: `0.5px solid ${selected ? 'rgba(36,86,255,0.55)' : colors.border2}`,
+                    borderRadius: 8,
+                    color: colors.white,
+                    padding: 12,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <div style={{ width: 42, height: 42, borderRadius: 8, background: `${color}22`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.heading, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+                    {company.logoDataUrl ? <img src={company.logoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} /> : name.slice(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                    <div style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>{company.invoicePrefix}{String(company.nextNumber || 1).padStart(4, '0')}</div>
+                    {selected ? (
+                      <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, color: '#6f8cff', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase' }}>
+                        <span style={{ width: 6, height: 6, borderRadius: 999, background: colors.blue }} />
+                        Actief
+                      </div>
+                    ) : null}
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </section>
+
+      <section style={{ display: 'grid', gap: 18, width: '100%', overflow: 'hidden' }}>
+          <div style={{ ...grid(190), marginBottom: 2 }}>
+            <MiniKpi label="Facturen" value={String(companyInvoices.length)} />
+            <MiniKpi label="Omzet" value={fmtCurrency(revenue)} />
+            <MiniKpi label="Volgend nummer" value={`${draft.invoicePrefix}${String(draft.nextNumber || 1).padStart(4, '0')}`} />
+          </div>
+
+          <Panel title="Bedrijfsgegevens">
+            <div style={formGrid(230)}>
+              <Field label="Publieke naam">
+                <TextInput value={draft.name} onChange={(value) => update('name', value)} placeholder="Bijv. CDS Facturen" />
+              </Field>
+              <Field label="Juridische naam">
+                <TextInput value={draft.legalName} onChange={(value) => update('legalName', value)} placeholder="Volledige bedrijfsnaam" />
+              </Field>
+              <Field label="E-mail">
+                <TextInput value={draft.email} onChange={(value) => update('email', value)} placeholder="info@uwbedrijf.nl" type="email" />
+              </Field>
+              <Field label="Telefoon">
+                <TextInput value={draft.phone} onChange={(value) => update('phone', value)} placeholder="+31 6 00000000" />
+              </Field>
+              <Field label="Website">
+                <TextInput value={draft.website} onChange={(value) => update('website', value)} placeholder="https://uwbedrijf.nl" />
+              </Field>
+              <Field label="KvK">
+                <TextInput value={draft.kvk} onChange={(value) => update('kvk', value)} placeholder="12345678" />
+              </Field>
+              <Field label="BTW-nummer">
+                <TextInput value={draft.btw} onChange={(value) => update('btw', value)} placeholder="NL000000000B01" />
+              </Field>
+              <Field label="IBAN">
+                <TextInput value={draft.iban} onChange={(value) => update('iban', value)} placeholder="NL00 BANK 0000 0000 00" />
+              </Field>
+              <Field label="Straat en huisnummer">
+                <TextInput value={draft.address} onChange={(value) => update('address', value)} placeholder="Straatnaam 1" />
+              </Field>
+              <Field label="Postcode">
+                <TextInput value={draft.postalCode} onChange={(value) => update('postalCode', value)} placeholder="1234 AB" />
+              </Field>
+              <Field label="Plaats">
+                <TextInput value={draft.city} onChange={(value) => update('city', value)} placeholder="Amsterdam" />
+              </Field>
+              <Field label="Land">
+                <SelectInput value={draft.country} onChange={(value) => update('country', value)}>
+                  <option>Nederland</option>
+                  <option>Belgie</option>
+                  <option>Duitsland</option>
+                </SelectInput>
+              </Field>
+            </div>
+          </Panel>
+
+          <Panel title="Huisstijl">
+            <div style={{ ...formGrid(220, 2, 20), alignItems: 'start' }}>
+              <div>
+                <div style={{ color: colors.muted, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Logo</div>
+                <label style={{ height: 150, border: `0.5px dashed ${colors.border2}`, borderRadius: 8, background: colors.surface, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', overflow: 'hidden' }}>
+                  {draft.logoDataUrl ? (
+                    <img src={draft.logoDataUrl} alt="Logo preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 14 }} />
+                  ) : (
+                    <div style={{ color: colors.muted, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
+                      <Icon name="upload" size={22} />
+                      <span style={{ fontSize: 12 }}>Logo uploaden</span>
+                    </div>
+                  )}
+                  <input type="file" accept="image/*" onChange={(event) => handleLogo(event.target.files?.[0])} style={{ display: 'none' }} />
+                </label>
+              </div>
+              <div>
+                <Field label="Merkkleur">
+                  <ColorControl value={brandColor} fallback={DEFAULT_BRAND_COLOR} onChange={updateBrandColor} />
+                </Field>
+                <Field label="Letterkleur">
+                  <ColorControl value={brandTextColor} fallback={DEFAULT_BRAND_TEXT_COLOR} onChange={(value) => update('brandTextColor', value)} />
+                </Field>
+                <div style={{ marginTop: 18 }}>
+                  <div style={{ color: colors.muted, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Factuurkop preview</div>
+                  <div style={{ minHeight: 70, background: safeHexColor(brandColor, DEFAULT_BRAND_COLOR), color: safeHexColor(brandTextColor, DEFAULT_BRAND_TEXT_COLOR), borderRadius: 8, padding: '10px 12px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, overflow: 'hidden' }}>
+                    <div style={{ width: 58, height: 48, borderRadius: 8, border: '1px solid rgba(255,255,255,0.28)', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                      {draft.logoDataUrl ? <img src={draft.logoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} /> : <span style={{ fontFamily: fonts.heading, fontWeight: 800 }}>{(draft.name || 'BD').slice(0, 2).toUpperCase()}</span>}
+                    </div>
+                    <div style={{ fontFamily: fonts.heading, fontWeight: 800, fontSize: 18, textAlign: 'right', overflowWrap: 'anywhere' }}>{draft.name || 'Bedrijfsnaam'}</div>
                   </div>
                 </div>
-                <div className="dp-actions">
-                  <button className="btn-secondary">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Bewerken
-                  </button>
-                  <button className="btn-primary" onClick={() => showToast('Actief profiel ingesteld')}>Activeren</button>
-                </div>
-              </div>
-
-              <div className="contact-grid">
-                <div className="contact-card">
-                  <div className="cc-label">Bedrijfsgegevens</div>
-                  {activeProfiel.kvk && <div className="cc-row"><svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg><span className="cc-val">KvK: {activeProfiel.kvk}</span></div>}
-                  {activeProfiel.btw && <div className="cc-row"><svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span className="cc-val">BTW: {activeProfiel.btw}</span></div>}
-                  {activeProfiel.iban && <div className="cc-row"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span className="cc-val">IBAN: {activeProfiel.iban}</span></div>}
-                </div>
-                <div className="contact-card">
-                  <div className="cc-label">Contactgegevens</div>
-                  {activeProfiel.email && <div className="cc-row"><svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><span className="cc-val">{activeProfiel.email}</span></div>}
-                  {activeProfiel.telefoon && <div className="cc-row"><svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 012 .19h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 7.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg><span className="cc-val">{activeProfiel.telefoon}</span></div>}
-                  {activeProfiel.adres && <div className="cc-row"><svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg><span className="cc-val">{activeProfiel.adres}</span></div>}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* MODAL */}
-      <div className={`modal-overlay${modalOpen ? ' open' : ''}`} onClick={e => { if (e.target === e.currentTarget) setModalOpen(false) }}>
-        <div className="modal">
-          <div className="modal-head">
-            <div className="modal-title">Bedrijfsprofiel aanmaken</div>
-            <button className="modal-close" onClick={() => setModalOpen(false)}>✕</button>
-          </div>
-          <div className="modal-body">
-            <div className="mfield">
-              <label>Bedrijfsnaam <span className="req">*</span></label>
-              <input type="text" placeholder="Naam van uw bedrijf" value={form.naam} onChange={e => setForm(f => ({ ...f, naam: e.target.value }))} />
-            </div>
-            <div className="modal-divider" />
-            <div className="modal-section-label">Bedrijfsgegevens</div>
-            <div className="mrow c2">
-              <div className="mfield"><label>KvK-nummer</label><input type="text" placeholder="8 cijfers" value={form.kvk} onChange={e => setForm(f => ({ ...f, kvk: e.target.value }))} /></div>
-              <div className="mfield"><label>BTW-nummer</label><input type="text" placeholder="NL000000000B00" value={form.btw} onChange={e => setForm(f => ({ ...f, btw: e.target.value }))} /></div>
-            </div>
-            <div className="mfield"><label>IBAN</label><input type="text" placeholder="NL00 BANK 0000 0000 00" value={form.iban} onChange={e => setForm(f => ({ ...f, iban: e.target.value }))} /></div>
-            <div className="modal-divider" />
-            <div className="modal-section-label">Contactgegevens</div>
-            <div className="mrow c2">
-              <div className="mfield"><label>E-mailadres</label><input type="email" placeholder="facturen@bedrijf.nl" value={form.email} onChange={e => setForm(f => ({ ...f, email: e.target.value }))} /></div>
-              <div className="mfield"><label>Telefoonnummer</label><input type="tel" placeholder="+31 6 00000000" value={form.telefoon} onChange={e => setForm(f => ({ ...f, telefoon: e.target.value }))} /></div>
-            </div>
-            <div className="modal-divider" />
-            <div className="modal-section-label">Adres</div>
-            <div className="mfield"><label>Straat en huisnummer</label><input type="text" placeholder="Straatnaam 0" value={form.straat} onChange={e => setForm(f => ({ ...f, straat: e.target.value }))} /></div>
-            <div className="mrow c2">
-              <div className="mfield"><label>Postcode</label><input type="text" placeholder="0000 AA" value={form.postcode} onChange={e => setForm(f => ({ ...f, postcode: e.target.value }))} /></div>
-              <div className="mfield"><label>Plaats</label><input type="text" placeholder="Plaatsnaam" value={form.plaats} onChange={e => setForm(f => ({ ...f, plaats: e.target.value }))} /></div>
-            </div>
-            <div className="modal-divider" />
-            <div className="modal-section-label">Weergave</div>
-            <div className="mfield">
-              <label>Kleur profiel</label>
-              <div className="avatar-picker">
-                {COLORS.map(c => (
-                  <div key={c} className={`av-color${selectedColor === c ? ' sel' : ''}`} style={{ background: c }} onClick={() => setSelectedColor(c)} />
-                ))}
-                <div className="av-preview" style={{ background: selectedColor + '22', color: selectedColor }}>
-                  {form.naam ? initials(form.naam) : '??'}
-                </div>
               </div>
             </div>
-          </div>
-          <div className="modal-foot">
-            <div className="modal-foot-hint">Velden met <span>*</span> zijn verplicht</div>
-            <div className="modal-actions">
-              <button className="btn-secondary" onClick={() => setModalOpen(false)}>Annuleren</button>
-              <button className="btn-primary" onClick={saveProfiel}>
-                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                Profiel opslaan
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+          </Panel>
 
-      <div className={`toast${toast ? ' show' : ''}`}>
-        <div className="toast-dot" />
-        <span>{toast}</span>
-      </div>
-    </AppLayout>
+          <Panel title="Factuurinstellingen">
+            <div style={formGrid(210)}>
+              <Field label="Factuurprefix">
+                <TextInput value={draft.invoicePrefix} onChange={(value) => update('invoicePrefix', value)} placeholder="F-" />
+              </Field>
+              <Field label="Volgend nummer">
+                <TextInput value={draft.nextNumber} onChange={(value) => update('nextNumber', Number(value || 1))} placeholder="1" type="number" />
+              </Field>
+              <Field label="Betaaltermijn">
+                <TextInput value={draft.paymentTerm} onChange={(value) => update('paymentTerm', Number(value || 14))} placeholder="14" type="number" />
+              </Field>
+              <Field label="Standaard BTW">
+                <SelectInput value={draft.defaultVat} onChange={(value) => update('defaultVat', Number(value))}>
+                  <option value={0}>0%</option>
+                  <option value={9}>9%</option>
+                  <option value={21}>21%</option>
+                </SelectInput>
+              </Field>
+            </div>
+            <div style={{ marginTop: 14 }}>
+              <Field label="Voettekst">
+                <TextArea value={draft.footerText} onChange={(value) => update('footerText', value)} placeholder="Bijv. bedankt voor uw vertrouwen." rows={4} />
+              </Field>
+            </div>
+          </Panel>
+      </section>
+
+      <Toast message={toast} />
+      <PlanRestrictionModal
+        open={limitOpen}
+        plan={plan}
+        title="Bedrijfsprofiel limiet bereikt"
+        message={limitMessage || 'Dit plan staat geen extra bedrijfsprofielen toe.'}
+        onClose={() => setLimitOpen(false)}
+      />
+    </main>
+  )
+}
+
+function normalizeCompanyProfile(company: CompanyProfile): CompanyProfile {
+  const brandColor = company.brandColor || company.accentColor || DEFAULT_BRAND_COLOR
+  return {
+    ...company,
+    accentColor: company.accentColor || brandColor,
+    brandColor,
+    brandTextColor: company.brandTextColor || DEFAULT_BRAND_TEXT_COLOR,
+  }
+}
+
+function ColorControl({
+  value,
+  fallback,
+  onChange,
+}: {
+  value: string
+  fallback: string
+  onChange: (value: string) => void
+}) {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <input type="color" value={safeHexColor(value, fallback)} onChange={(event) => onChange(event.target.value)} style={{ width: 46, height: 38, border: 0, padding: 0, background: 'transparent' }} />
+      <input value={value} onChange={(event) => onChange(event.target.value)} placeholder={fallback} style={inputStyle} />
+    </div>
+  )
+}
+
+function safeHexColor(value: string, fallback: string) {
+  return /^#[0-9a-f]{6}$/i.test(value) ? value : fallback
+}
+
+function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section style={{ background: colors.surface, border: `0.5px solid ${colors.border2}`, borderRadius: 8, padding: 20 }}>
+      <h2 style={{ margin: '0 0 16px', fontFamily: fonts.heading, color: '#fff', fontSize: 15 }}>{title}</h2>
+      {children}
+    </section>
+  )
+}
+
+function MiniKpi({ label, value }: { label: string; value: string }) {
+  return (
+    <div style={{ background: colors.surface, border: `0.5px solid ${colors.border2}`, borderRadius: 8, padding: 15 }}>
+      <div style={{ color: colors.muted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 7 }}>{label}</div>
+      <div style={{ color: '#fff', fontFamily: fonts.heading, fontWeight: 800, fontSize: 20 }}>{value}</div>
+    </div>
   )
 }

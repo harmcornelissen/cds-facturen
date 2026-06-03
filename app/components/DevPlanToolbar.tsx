@@ -119,15 +119,27 @@ export function PlanRestrictionModal({
   plan,
   title = 'Upgrade nodig',
   message,
+  showUpgradeButton,
 }: {
   open: boolean
   onClose: () => void
   plan: Plan
   title?: string
   message?: string
+  showUpgradeButton?: boolean
 }) {
   return (
-    <Modal open={open} title={title} onClose={onClose} footer={<button type="button" onClick={onClose} style={{ border: 0, background: colors.blue, color: '#fff', borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontFamily: fonts.heading, fontWeight: 800 }}>Sluiten</button>}>
+    <Modal
+      open={open}
+      title={title}
+      onClose={onClose}
+      footer={(
+        <>
+          {showUpgradeButton ? <button type="button" style={{ border: 0, background: colors.blue, color: '#fff', borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontFamily: fonts.heading, fontWeight: 800 }}>Upgrade</button> : null}
+          <button type="button" onClick={onClose} style={{ border: `0.5px solid ${colors.border2}`, background: colors.surface, color: colors.white, borderRadius: 8, padding: '9px 14px', cursor: 'pointer', fontFamily: fonts.heading, fontWeight: 800 }}>Sluiten</button>
+        </>
+      )}
+    >
       <div style={{ display: 'grid', gap: 16 }}>
         <div style={{ color: colors.white, lineHeight: 1.7 }}>{message || getPlanMessage(plan)}</div>
         <div style={{ border: `0.5px solid ${colors.border2}`, borderRadius: 8, overflow: 'hidden' }}>

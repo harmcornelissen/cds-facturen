@@ -126,6 +126,7 @@ export const STORAGE_KEYS = {
   invoices: 'cds_facturen',
   offers: 'cds_offertes',
   recurring: 'cds_terugkerend',
+  activeCompany: 'cds_actief_bedrijf',
   plan: 'cds_plan',
   users: 'cds_users',
   auth: 'cds_auth',
@@ -267,6 +268,10 @@ export function useCompanies() {
   return useStoredState(STORAGE_KEYS.companies, fallback)
 }
 
+export function useActiveCompanyIndex() {
+  return useStoredState<number>(STORAGE_KEYS.activeCompany, 0)
+}
+
 export function useInvoices() {
   const fallback = useMemo<Invoice[]>(() => [], [])
   return useStoredState(STORAGE_KEYS.invoices, fallback)
@@ -401,6 +406,16 @@ export function canUseIncasso(plan: Plan) {
 
 export function maxCompanyProfiles(plan: Plan) {
   return getPlanLimits(plan).companyProfiles
+}
+
+export function resolveActiveCompanyIndex(companies: CompanyProfile[], activeIndex: number) {
+  if (companies.length === 0) return 0
+  if (!Number.isFinite(activeIndex)) return 0
+  return Math.min(Math.max(Math.trunc(activeIndex), 0), companies.length - 1)
+}
+
+export function companyProfileLabel(company?: Pick<CompanyProfile, 'name' | 'legalName'>, fallback = 'Nieuw profiel') {
+  return company?.name?.trim() || company?.legalName?.trim() || fallback
 }
 
 export function hashPassword(password: string) {

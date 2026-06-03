@@ -2,10 +2,22 @@
 
 import { useEffect, useState } from 'react'
 import { PlanRestrictionModal } from '@/app/components/DevPlanToolbar'
-import { Button, EmptyState, Field, SelectInput, TextArea, TextInput, Toast } from '@/app/components/ui'
+import { Button, Field, SelectInput, TextArea, TextInput, Toast } from '@/app/components/ui'
 import { Icon } from '@/app/components/Icon'
 import { colors, fonts, formGrid, grid, inputStyle, mainScroll, pageHeader, titleStyle } from '@/app/lib/theme'
-import { blankCompany, fmtCurrency, invoiceTotals, maxCompanyProfiles, type CompanyProfile, useCompanies, useInvoices, usePlan } from '@/app/lib/data'
+import {
+  blankCompany,
+  companyProfileLabel,
+  fmtCurrency,
+  invoiceTotals,
+  maxCompanyProfiles,
+  resolveActiveCompanyIndex,
+  type CompanyProfile,
+  useActiveCompanyIndex,
+  useCompanies,
+  useInvoices,
+  usePlan,
+} from '@/app/lib/data'
 
 const DEFAULT_BRAND_COLOR = '#2456ff'
 const DEFAULT_BRAND_TEXT_COLOR = '#ffffff'
@@ -14,30 +26,37 @@ export default function BedrijfsprofielenPage() {
   const [companies, setCompanies] = useCompanies()
   const [invoices] = useInvoices()
   const [plan] = usePlan()
-  const [activeId, setActiveId] = useState('')
-  const [draft, setDraft] = useState<CompanyProfile>(blankCompany())
+  const [activeCompanyIndex, setActiveCompanyIndex] = useActiveCompanyIndex()
+  const [creatingNew, setCreatingNew] = useState(false)
+  const [draft, setDraft] = useState<CompanyProfile>(blankCompanyDraft())
   const [limitOpen, setLimitOpen] = useState(false)
   const [toast, setToast] = useState('')
 
-  const active = companies.find((company) => company.id === activeId)
+  const resolvedActiveIndex = resolveActiveCompanyIndex(companies, activeCompanyIndex)
+  const active = creatingNew ? undefined : companies[resolvedActiveIndex]
   const companyInvoices = invoices.filter((invoice) => invoice.companyId === draft.id || invoice.companyName === draft.name)
   const revenue = companyInvoices.reduce((sum, invoice) => sum + invoiceTotals(invoice).total, 0)
   const profileLimit = maxCompanyProfiles(plan)
   const limitReached = profileLimit !== null && companies.length >= profileLimit
   const limitLabel = profileLimit === null ? 'onbeperkt' : String(profileLimit)
-  const limitMessage = plan === 'gratis'
-    ? 'Upgrade naar Basis voor meer profielen'
-    : plan === 'basis'
-      ? 'Upgrade naar Professional voor onbeperkte profielen'
-      : ''
+  const limitMessage = companyLimitMessage(plan)
 
   useEffect(() => {
-    if (!activeId && companies[0]) setActiveId(companies[0].id)
-  }, [activeId, companies])
+    if (companies.length === 0) {
+      if (activeCompanyIndex !== 0) setActiveCompanyIndex(0)
+      if (!creatingNew) setCreatingNew(true)
+      return
+    }
 
-  useEffect(() => {
-    setDraft(active ? normalizeCompanyProfile(active) : blankCompany())
-  }, [active])
+    if (activeCompanyIndex !== resolvedActiveIndex) {
+      setActiveCompanyIndex(resolvedActiveIndex)
+      return
+    }
+
+    if (!creatingNew) {
+      setDraft(normalizeCompanyProfile(companies[resolvedActiveIndex]))
+    }
+  }, [activeCompanyIndex, companies, creatingNew, resolvedActiveIndex, setActiveCompanyIndex])
 
   function update<K extends keyof CompanyProfile>(key: K, value: CompanyProfile[K]) {
     setDraft((current) => ({ ...current, [key]: value }))
@@ -48,23 +67,21 @@ export default function BedrijfsprofielenPage() {
   }
 
   function save() {
-    if (!draft.name.trim()) {
-      setToast('Vul een bedrijfsnaam in.')
-      return
-    }
     const normalizedDraft = normalizeCompanyProfile(draft)
     const limit = maxCompanyProfiles(plan)
-    const isExisting = companies.some((company) => company.id === normalizedDraft.id)
-    if (!isExisting && limit !== null && companies.length >= limit) {
+    const existingIndex = companies.findIndex((company) => company.id === normalizedDraft.id)
+    if (existingIndex === -1 && limit !== null && companies.length >= limit) {
       setLimitOpen(true)
       return
     }
+
     setCompanies((current) => {
       const exists = current.some((company) => company.id === normalizedDraft.id)
       return exists ? current.map((company) => (company.id === normalizedDraft.id ? normalizedDraft : company)) : [normalizedDraft, ...current]
     })
+    setCreatingNew(false)
     setDraft(normalizedDraft)
-    setActiveId(normalizedDraft.id)
+    setActiveCompanyIndex(existingIndex === -1 ? 0 : existingIndex)
     setToast('Bedrijfsprofiel opgeslagen')
   }
 
@@ -73,9 +90,34 @@ export default function BedrijfsprofielenPage() {
       setLimitOpen(true)
       return
     }
-    const next = blankCompany()
-    setActiveId('')
+    const next = blankCompanyDraft()
+    setCreatingNew(true)
     setDraft(next)
+  }
+
+  function selectCompany(index: number) {
+    const selected = companies[index]
+    if (!selected) return
+    setCreatingNew(false)
+    setActiveCompanyIndex(index)
+    setDraft(normalizeCompanyProfile(selected))
+  }
+
+  function deleteActiveProfile() {
+    if (!active) return
+    if (companies.length <= 1) {
+      setToast('Je kunt het enige bedrijfsprofiel niet verwijderen.')
+      return
+    }
+    if (!window.confirm(`Bedrijfsprofiel "${companyProfileLabel(active)}" verwijderen?`)) return
+
+    const nextCompanies = companies.filter((company) => company.id !== active.id)
+    const nextIndex = resolveActiveCompanyIndex(nextCompanies, resolvedActiveIndex)
+    setCompanies(nextCompanies)
+    setActiveCompanyIndex(nextIndex)
+    setCreatingNew(false)
+    setDraft(normalizeCompanyProfile(nextCompanies[nextIndex]))
+    setToast('Bedrijfsprofiel verwijderd')
   }
 
   function handleLogo(file?: File) {
@@ -87,6 +129,7 @@ export default function BedrijfsprofielenPage() {
 
   const brandColor = draft.brandColor || draft.accentColor || DEFAULT_BRAND_COLOR
   const brandTextColor = draft.brandTextColor || DEFAULT_BRAND_TEXT_COLOR
+  const nextInvoicePreview = `${draft.invoicePrefix || 'FAC-'}${String(draft.nextNumber || 1).padStart(4, '0')}`
 
   return (
     <main style={mainScroll}>
@@ -96,9 +139,7 @@ export default function BedrijfsprofielenPage() {
           <div style={{ color: colors.muted, fontSize: 13, marginTop: 5 }}>Beheer bedrijfsgegevens, huisstijl en factuurinstellingen.</div>
         </div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <span title={limitReached ? limitMessage : undefined} style={{ display: 'inline-flex' }}>
-            <Button variant="secondary" icon="plus" onClick={createNew} disabled={limitReached}>Nieuw profiel</Button>
-          </span>
+          {!creatingNew && active ? <Button variant="danger" icon="trash" onClick={deleteActiveProfile}>Verwijderen</Button> : null}
           <Button icon="check" onClick={save}>Opslaan</Button>
         </div>
       </div>
@@ -115,60 +156,51 @@ export default function BedrijfsprofielenPage() {
             </div>
           ) : null}
         </div>
-        {companies.length === 0 ? (
-          <EmptyState compact icon="company" title="Geen profielen" body="Maak een bedrijfsprofiel aan voor factuurnummers en betaaltermijnen." />
-        ) : (
-          <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: 14 }}>
-            {companies.map((company) => {
-              const selected = draft.id === company.id
-              const color = company.brandColor || company.accentColor || DEFAULT_BRAND_COLOR
-              const name = company.name || company.legalName || 'Naamloos profiel'
-              return (
-                <button
-                  type="button"
-                  key={company.id}
-                  onClick={() => setActiveId(company.id)}
-                  style={{
-                    width: 230,
-                    minWidth: 210,
-                    minHeight: 82,
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    background: selected ? colors.blueSoft : colors.surface,
-                    border: `0.5px solid ${selected ? 'rgba(36,86,255,0.55)' : colors.border2}`,
-                    borderRadius: 8,
-                    color: colors.white,
-                    padding: 12,
-                    textAlign: 'left',
-                    cursor: 'pointer',
-                  }}
-                >
-                  <div style={{ width: 42, height: 42, borderRadius: 8, background: `${color}22`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.heading, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
-                    {company.logoDataUrl ? <img src={company.logoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} /> : name.slice(0, 2).toUpperCase()}
-                  </div>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
-                    <div style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>{company.invoicePrefix}{String(company.nextNumber || 1).padStart(4, '0')}</div>
-                    {selected ? (
-                      <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, color: '#6f8cff', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase' }}>
-                        <span style={{ width: 6, height: 6, borderRadius: 999, background: colors.blue }} />
-                        Actief
-                      </div>
-                    ) : null}
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        )}
+        <div style={{ display: 'flex', gap: 10, overflowX: 'auto', padding: 14 }}>
+          {companies.map((company, index) => {
+            const selected = !creatingNew && index === resolvedActiveIndex
+            const color = company.brandColor || company.accentColor || DEFAULT_BRAND_COLOR
+            const name = companyProfileLabel(company)
+            return (
+              <button
+                type="button"
+                key={company.id}
+                onClick={() => selectCompany(index)}
+                style={profileTabStyle(selected)}
+              >
+                <div style={{ width: 42, height: 42, borderRadius: 8, background: `${color}22`, color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.heading, fontWeight: 800, overflow: 'hidden', flexShrink: 0 }}>
+                  {company.logoDataUrl ? <img src={company.logoDataUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: 4 }} /> : name.slice(0, 2).toUpperCase()}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                  <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{name}</div>
+                  <div style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>{company.invoicePrefix || 'FAC-'}{String(company.nextNumber || 1).padStart(4, '0')}</div>
+                  {selected ? <ActiveTabLabel /> : null}
+                </div>
+              </button>
+            )
+          })}
+          <button
+            type="button"
+            onClick={createNew}
+            style={profileTabStyle(creatingNew)}
+          >
+            <div style={{ width: 42, height: 42, borderRadius: 8, background: colors.blueSoft, color: '#6f8cff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon name="plus" size={20} />
+            </div>
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontSize: 13.5, fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Nieuw profiel</div>
+              <div style={{ color: colors.muted, fontSize: 11, marginTop: 4 }}>{limitReached ? 'Limiet bereikt' : 'Lege form openen'}</div>
+              {creatingNew ? <ActiveTabLabel /> : null}
+            </div>
+          </button>
+        </div>
       </section>
 
       <section style={{ display: 'grid', gap: 18, width: '100%', overflow: 'hidden' }}>
           <div style={{ ...grid(190), marginBottom: 2 }}>
             <MiniKpi label="Facturen" value={String(companyInvoices.length)} />
             <MiniKpi label="Omzet" value={fmtCurrency(revenue)} />
-            <MiniKpi label="Volgend nummer" value={`${draft.invoicePrefix}${String(draft.nextNumber || 1).padStart(4, '0')}`} />
+            <MiniKpi label="Volgend nummer" value={nextInvoicePreview} />
           </div>
 
           <Panel title="Bedrijfsgegevens">
@@ -208,6 +240,7 @@ export default function BedrijfsprofielenPage() {
               </Field>
               <Field label="Land">
                 <SelectInput value={draft.country} onChange={(value) => update('country', value)}>
+                  <option value="">Selecteer land</option>
                   <option>Nederland</option>
                   <option>Belgie</option>
                   <option>Duitsland</option>
@@ -234,10 +267,10 @@ export default function BedrijfsprofielenPage() {
               </div>
               <div>
                 <Field label="Merkkleur">
-                  <ColorControl value={brandColor} fallback={DEFAULT_BRAND_COLOR} onChange={updateBrandColor} />
+                  <ColorControl value={draft.brandColor || draft.accentColor} fallback={DEFAULT_BRAND_COLOR} onChange={updateBrandColor} />
                 </Field>
                 <Field label="Letterkleur">
-                  <ColorControl value={brandTextColor} fallback={DEFAULT_BRAND_TEXT_COLOR} onChange={(value) => update('brandTextColor', value)} />
+                  <ColorControl value={draft.brandTextColor} fallback={DEFAULT_BRAND_TEXT_COLOR} onChange={(value) => update('brandTextColor', value)} />
                 </Field>
                 <div style={{ marginTop: 18 }}>
                   <div style={{ color: colors.muted, fontSize: 12, fontWeight: 700, marginBottom: 8 }}>Factuurkop preview</div>
@@ -258,13 +291,14 @@ export default function BedrijfsprofielenPage() {
                 <TextInput value={draft.invoicePrefix} onChange={(value) => update('invoicePrefix', value)} placeholder="F-" />
               </Field>
               <Field label="Volgend nummer">
-                <TextInput value={draft.nextNumber} onChange={(value) => update('nextNumber', Number(value || 1))} placeholder="1" type="number" />
+                <TextInput value={draft.nextNumber || ''} onChange={(value) => update('nextNumber', Number(value || 0))} placeholder="1" type="number" />
               </Field>
               <Field label="Betaaltermijn">
-                <TextInput value={draft.paymentTerm} onChange={(value) => update('paymentTerm', Number(value || 14))} placeholder="14" type="number" />
+                <TextInput value={draft.paymentTerm || ''} onChange={(value) => update('paymentTerm', Number(value || 0))} placeholder="14" type="number" />
               </Field>
               <Field label="Standaard BTW">
-                <SelectInput value={draft.defaultVat} onChange={(value) => update('defaultVat', Number(value))}>
+                <SelectInput value={draft.defaultVat || ''} onChange={(value) => update('defaultVat', Number(value || 0))}>
+                  <option value="">Selecteer BTW</option>
                   <option value={0}>0%</option>
                   <option value={9}>9%</option>
                   <option value={21}>21%</option>
@@ -286,19 +320,74 @@ export default function BedrijfsprofielenPage() {
         title="Bedrijfsprofiel limiet bereikt"
         message={limitMessage || 'Dit plan staat geen extra bedrijfsprofielen toe.'}
         onClose={() => setLimitOpen(false)}
+        showUpgradeButton
       />
     </main>
   )
 }
 
+function blankCompanyDraft(): CompanyProfile {
+  return {
+    ...blankCompany(),
+    country: '',
+    accentColor: '',
+    brandColor: '',
+    brandTextColor: '',
+    invoicePrefix: '',
+    nextNumber: 0,
+    paymentTerm: 0,
+    defaultVat: 0,
+    footerText: '',
+  }
+}
+
 function normalizeCompanyProfile(company: CompanyProfile): CompanyProfile {
-  const brandColor = company.brandColor || company.accentColor || DEFAULT_BRAND_COLOR
   return {
     ...company,
-    accentColor: company.accentColor || brandColor,
-    brandColor,
-    brandTextColor: company.brandTextColor || DEFAULT_BRAND_TEXT_COLOR,
+    accentColor: company.accentColor || company.brandColor || '',
+    brandColor: company.brandColor || company.accentColor || '',
+    brandTextColor: company.brandTextColor || '',
+    nextNumber: Number(company.nextNumber || 0),
+    paymentTerm: Number(company.paymentTerm || 0),
+    defaultVat: Number(company.defaultVat || 0),
   }
+}
+
+function companyLimitMessage(plan: string) {
+  if (plan === 'gratis') {
+    return 'Je Gratis account ondersteunt maximaal 1 bedrijfsprofiel. Upgrade naar Basis voor maximaal 3 profielen.'
+  }
+  if (plan === 'basis') {
+    return 'Je Basis account ondersteunt maximaal 3 bedrijfsprofielen. Upgrade naar Professional voor onbeperkte profielen.'
+  }
+  return ''
+}
+
+function profileTabStyle(selected: boolean) {
+  return {
+    width: 230,
+    minWidth: 210,
+    minHeight: 82,
+    display: 'flex',
+    alignItems: 'center',
+    gap: 12,
+    background: selected ? colors.blueSoft : colors.surface,
+    border: `0.5px solid ${selected ? 'rgba(36,86,255,0.55)' : colors.border2}`,
+    borderRadius: 8,
+    color: colors.white,
+    padding: 12,
+    textAlign: 'left' as const,
+    cursor: 'pointer',
+  }
+}
+
+function ActiveTabLabel() {
+  return (
+    <div style={{ marginTop: 7, display: 'inline-flex', alignItems: 'center', gap: 5, color: '#6f8cff', fontSize: 10.5, fontWeight: 800, textTransform: 'uppercase' }}>
+      <span style={{ width: 6, height: 6, borderRadius: 999, background: colors.blue }} />
+      Actief
+    </div>
+  )
 }
 
 function ColorControl({

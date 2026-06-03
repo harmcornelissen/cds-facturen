@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { Suspense, useEffect, useMemo, useState } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PlanRestrictionModal } from '@/app/components/DevPlanToolbar'
@@ -11,17 +12,20 @@ import {
   blankLine,
   canCreateInvoice,
   canUseIdeal,
+  companyProfileLabel,
   createId,
   fmtCurrency,
   invoiceTotals,
   lineTotals,
   nextInvoiceNumber,
+  resolveActiveCompanyIndex,
   todayIso,
   type Invoice,
   type InvoiceLine,
   type InvoiceStatus,
   type PaymentMethods,
   type PriceInputMode,
+  useActiveCompanyIndex,
   useClients,
   useCompanies,
   useInvoices,
@@ -52,6 +56,7 @@ function NieuweFactuurForm() {
   const requestedClientId = searchParams.get('client') || ''
   const [clients] = useClients()
   const [companies, setCompanies] = useCompanies()
+  const [activeCompanyIndex, setActiveCompanyIndex] = useActiveCompanyIndex()
   const [invoices, setInvoices] = useInvoices()
   const [plan] = usePlan()
   const [companyId, setCompanyId] = useState('')
@@ -72,7 +77,9 @@ function NieuweFactuurForm() {
 
   const editingInvoice = editId ? invoices.find((item) => item.id === editId) : undefined
   const isEditing = Boolean(editingInvoice && editingInvoice.status === 'concept')
-  const company = companies.find((item) => item.id === companyId) || companies[0]
+  const resolvedActiveCompanyIndex = resolveActiveCompanyIndex(companies, activeCompanyIndex)
+  const activeCompany = companies[resolvedActiveCompanyIndex]
+  const company = companies.find((item) => item.id === companyId) || activeCompany
   const client = clients.find((item) => item.id === clientId)
   const defaultVat = company?.defaultVat || 21
   const invoiceNumber = editingInvoice?.number || nextInvoiceNumber(company)
@@ -106,8 +113,21 @@ function NieuweFactuurForm() {
   )
 
   useEffect(() => {
-    if (!companyId && companies[0]) setCompanyId(companies[0].id)
-  }, [companies, companyId])
+    if (companies.length === 0) {
+      if (companyId) setCompanyId('')
+      if (activeCompanyIndex !== 0) setActiveCompanyIndex(0)
+      return
+    }
+
+    if (activeCompanyIndex !== resolvedActiveCompanyIndex) {
+      setActiveCompanyIndex(resolvedActiveCompanyIndex)
+      return
+    }
+
+    if (!editId && (!companyId || !companies.some((item) => item.id === companyId))) {
+      setCompanyId(activeCompany?.id || '')
+    }
+  }, [activeCompany?.id, activeCompanyIndex, companies, companyId, editId, resolvedActiveCompanyIndex, setActiveCompanyIndex])
 
   useEffect(() => {
     if (!editId && requestedClientId && clients.some((item) => item.id === requestedClientId)) {
@@ -178,6 +198,12 @@ function NieuweFactuurForm() {
     if (key === 'ideal' && !idealAllowed) return
     if (key === 'directDebit') return
     setPaymentMethods((current) => ({ ...current, [key]: !current[key] }))
+  }
+
+  function selectCompany(nextCompanyId: string) {
+    setCompanyId(nextCompanyId)
+    const nextIndex = companies.findIndex((item) => item.id === nextCompanyId)
+    if (nextIndex >= 0) setActiveCompanyIndex(nextIndex)
   }
 
   function buildInvoice(status: InvoiceStatus): Invoice {
@@ -263,10 +289,16 @@ function NieuweFactuurForm() {
             <h2 style={{ margin: '0 0 16px', fontFamily: fonts.heading, fontSize: 15 }}>Klant en factuurgegevens</h2>
             <div style={formGrid(230, 2)}>
               <Field label="Bedrijfsprofiel">
-                <SelectInput value={companyId} onChange={setCompanyId}>
-                  {companies.length === 0 ? <option value="">Geen bedrijfsprofiel</option> : null}
-                  {companies.map((item) => <option key={item.id} value={item.id}>{item.name || item.legalName}</option>)}
-                </SelectInput>
+                {companies.length === 0 ? (
+                  <div style={{ ...inputStyle, minHeight: 39, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', color: colors.muted }}>
+                    <span>Geen bedrijfsprofielen -</span>
+                    <Link href="/bedrijfsprofielen" style={{ color: '#6f8cff', fontWeight: 800, textDecoration: 'none' }}>maak er eerst een aan</Link>
+                  </div>
+                ) : (
+                  <SelectInput value={company?.id || companyId} onChange={selectCompany}>
+                    {companies.map((item) => <option key={item.id} value={item.id}>{companyProfileLabel(item)}</option>)}
+                  </SelectInput>
+                )}
               </Field>
               <Field label="Klant">
                 <SelectInput value={clientId} onChange={setClientId}>
